@@ -15,7 +15,7 @@ COPY account/src account/src
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp -q -pl account -am -DskipTests package
 
 FROM eclipse-temurin:25.0.5.1_2-jre-noble
-# wget is in the base image: the Compose health check of the template uses it against the management port
+# No HEALTHCHECK and no Compose healthcheck: the template waits from the host (scripts/wait-ready.sh polls /health/ready on the management port).
 COPY --from=build /src/account/target/account.jar /app/app.jar
 COPY docker/entrypoint.sh /app/entrypoint.sh
 USER 10001:10001
