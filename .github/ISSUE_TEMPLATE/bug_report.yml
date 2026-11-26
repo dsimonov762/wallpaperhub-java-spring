@@ -1,0 +1,27 @@
+name: Bug report
+description: Something in this repository does not work as documented (a build, a service, the conformance run).
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect
+      description: The command you ran and its output (the last lines are enough).
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit and template version
+      description: "`git rev-parse --short HEAD` and the content of `.template-version`"
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: "`java -version`, `docker version`, and the operating system."
+      render: text
+    validations:
+      required: true

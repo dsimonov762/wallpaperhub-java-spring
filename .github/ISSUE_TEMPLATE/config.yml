@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability (private)
+    url: https://github.com/dsimonov762/wallpaperhub-java-spring/security/advisories/new
+    about: Do not open a public issue for a security problem. See SECURITY.md.
+  - name: The template and its work packages
+    url: https://github.com/dsimonov762/wallpaperhub-template/blob/master/docs/ROADMAP.md
+    about: The packages (WP-S0 to WP-S4) this repository implements, with their goals and definitions of done.

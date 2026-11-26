@@ -1,0 +1,26 @@
+# The configuration every service has in common. A service imports it:  spring.config.import: classpath:wallpaperhub-platform.yml
+# Names on the right are the contract (docs/SERVICE-SPEC.md section 3 of the template); Startup checks the required ones first.
+spring:
+  main:
+    banner-mode: "off"            # a banner is not JSON (L1)
+  application:
+    name: ${OTEL_SERVICE_NAME}
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s   # S1: exit within 30 s of SIGTERM
+
+server:
+  port: ${HTTP_PORT:8080}
+  shutdown: graceful
+
+wallpaperhub:
+  service-name: ${OTEL_SERVICE_NAME}
+  profile: ${APP_PROFILE}
+  oidc:
+    issuer-uri: ${OIDC_ISSUER_URI}
+    jwks-uri: ${OIDC_JWKS_URI}
+    client-id: ${OIDC_CLIENT_ID}
+  management:
+    port: ${MGMT_PORT:8081}

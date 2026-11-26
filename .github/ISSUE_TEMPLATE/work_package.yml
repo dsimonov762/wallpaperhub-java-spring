@@ -1,0 +1,25 @@
+name: Work package
+description: A piece of work from the roadmap of the template (WP-S1 to WP-S4 and their parts).
+title: "WP-: "
+labels: ["work-package"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: The id in docs/ROADMAP.md of the template, for example WP-S1.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: What will change, and which modules
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: The definition of done of the package, and the conformance or system flows that prove it.
+    validations:
+      required: true

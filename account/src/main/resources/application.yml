@@ -1,0 +1,4 @@
+# account-service. What every service shares is in the platform module; the environment variables are listed in docs/SERVICE-SPEC.md of the template.
+spring:
+  config:
+    import: classpath:wallpaperhub-platform.yml

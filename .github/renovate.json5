@@ -1,0 +1,44 @@
+// Renovate (https://docs.renovatebot.com): the Spring Boot parent (which moves every library it manages), the Maven wrapper, the base images of the
+// Dockerfiles, GitHub Actions, and the version of the template this repository is pinned to (.template-version).
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  schedule: ["before 8am on monday"],
+  prConcurrentLimit: 10,
+  labels: ["dependencies"],
+  semanticCommits: "disabled",
+
+  customManagers: [
+    {
+      // .template-version holds a tag of the template; a new tag is a pull request that also needs `scripts/template.sh sync` (it refreshes contracts/).
+      customType: "regex",
+      description: "the pinned version of wallpaperhub-template",
+      managerFilePatterns: ["/^\\.template-version$/"],
+      matchStrings: ["^(?<currentValue>v\\d+\\.\\d+\\.\\d+)\\s*$"],
+      depNameTemplate: "dsimonov762/wallpaperhub-template",
+      datasourceTemplate: "github-tags",
+    },
+  ],
+
+  packageRules: [
+    {
+      // A new major of Spring Boot (or of Java) is a project, not a bump: it waits for approval on the dependency dashboard.
+      matchPackageNames: ["org.springframework.boot:spring-boot-starter-parent"],
+      matchUpdateTypes: ["major"],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Libraries that Spring Boot manages are moved by the Boot version, not one by one.
+      matchManagers: ["maven"],
+      matchDepTypes: ["dependencies"],
+      matchPackageNames: ["!org.springframework.boot:spring-boot-starter-parent"],
+      enabled: false,
+    },
+    {
+      matchManagers: ["dockerfile"],
+      matchPackageNames: ["eclipse-temurin"],
+      description: "the JDK and the JRE image move together",
+      groupName: "Temurin images",
+    },
+  ],
+}

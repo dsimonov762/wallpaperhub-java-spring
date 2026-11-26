@@ -1,0 +1,16 @@
+# build output
+target/
+*.log
+# the template checkout (scripts/template.sh sync); contracts/ is a committed copy of it
+.template/
+.template.ref
+# IDEs
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+# local
+.env
+.DS_Store

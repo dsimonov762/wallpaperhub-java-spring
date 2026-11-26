@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>dev.wallpaperhub</groupId>
+    <artifactId>wallpaperhub-java-spring</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>platform</artifactId>
+  <name>platform</name>
+  <description>What the four services share: request id, problem+json and localization, JWT validation, JSON logs,
+    the management port, fail-fast configuration (docs/SERVICE-SPEC.md of the template).</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <!-- the localization bundles are a contract of the template, vendored in contracts/i18n -->
+      <resource>
+        <directory>${project.basedir}/../contracts/i18n</directory>
+        <targetPath>i18n</targetPath>
+        <includes>
+          <include>messages.*.json</include>
+        </includes>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+      <testResource>
+        <directory>${project.basedir}/../contracts/i18n</directory>
+        <targetPath>i18n-contract</targetPath>
+        <includes>
+          <include>format-tests.json</include>
+        </includes>
+      </testResource>
+    </testResources>
+  </build>
+</project>

@@ -1,0 +1,5 @@
+# One maintainer today; give each area its owners when a team joins (and require code-owner review in .github/rulesets/master.json).
+*                  @dsimonov762
+/platform/         @dsimonov762
+/.github/          @dsimonov762
+/contracts/        @dsimonov762

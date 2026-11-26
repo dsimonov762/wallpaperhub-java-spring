@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SERVICE-SPEC section 6: JSON, one object per line, on stdout. LOG_LEVEL (trace, debug, info, warn, error) sets the root level. -->
+<configuration>
+  <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.out</target>
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+      <layout class="dev.wallpaperhub.platform.logging.JsonLayout"/>
+    </encoder>
+  </appender>
+  <root level="${LOG_LEVEL:-info}">
+    <appender-ref ref="STDOUT_JSON"/>
+  </root>
+</configuration>

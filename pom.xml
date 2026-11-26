@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Spring Boot manages the versions of its libraries and of the Maven plugins used here. Nothing below names a version
+       except the project's own (and the Boot version on the next line): to update, change the Boot version. -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.2.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>dev.wallpaperhub</groupId>
+  <artifactId>wallpaperhub-java-spring</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Wallpaper Hub (Java, Spring Boot)</name>
+  <description>Implementation of the four Wallpaper Hub services in Java with Spring Boot.</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <modules>
+    <module>platform</module>
+    <module>account</module>
+    <!-- media, catalog and notification are added by WP-S2, WP-S3 and WP-S4 -->
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>dev.wallpaperhub</groupId>
+        <artifactId>platform</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
