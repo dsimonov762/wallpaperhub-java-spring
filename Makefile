@@ -40,10 +40,11 @@ template-sync: ## fetch the pinned template and refresh contracts/
 template-check: ## contracts/ is identical to the pinned template
 	scripts/template.sh check
 
-run: ## build the image of SVC (default account) and start it with the infrastructure running (make up first)
+run: ## build the image of SVC (default account), start it with the infrastructure running (make up first) and wait for /health/ready
 	@scripts/template.sh ensure
 	$(COMPOSE) up -d --build --no-deps $(SVC)
 	bash $(TEMPLATE)/scripts/wait-healthy.sh 300
+	bash $(TEMPLATE)/scripts/wait-ready.sh $(SVC) 180
 
 github-plan: ## print the repository settings that github-apply would send
 	python3 scripts/github-setup.py apply --dry-run
