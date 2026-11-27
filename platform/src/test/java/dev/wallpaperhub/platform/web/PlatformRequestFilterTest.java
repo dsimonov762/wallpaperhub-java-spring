@@ -31,7 +31,11 @@ class PlatformRequestFilterTest {
 
     @Test
     void takesTheTraceAndSpanIdOfTheActiveSpan() throws Exception {
-        SpanContext active = SpanContext.create("0af7651916cd43dd8448eb211c80319c", "b7ad6b7169203331", TraceFlags.getSampled(), TraceState.getDefault());
+        SpanContext active = SpanContext.create(
+                "0af7651916cd43dd8448eb211c80319c",
+                "b7ad6b7169203331",
+                TraceFlags.getSampled(),
+                TraceState.getDefault());
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/users");
         request.addHeader("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
         try (Scope ignored = Span.wrap(active).makeCurrent()) {

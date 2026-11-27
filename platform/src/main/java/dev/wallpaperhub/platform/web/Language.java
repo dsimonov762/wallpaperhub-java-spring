@@ -9,8 +9,7 @@ public final class Language {
     public static final String DEFAULT = "en";
     private static final Set<String> SUPPORTED = Set.of("en", "de", "es");
 
-    private Language() {
-    }
+    private Language() {}
 
     public static String of(String acceptLanguage) {
         if (acceptLanguage == null) {

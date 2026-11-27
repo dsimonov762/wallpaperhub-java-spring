@@ -22,13 +22,19 @@ class RequestContextTest {
     @Test
     void theTraceIdOfAValidTraceparentIsKept() {
         String trace = "4bf92f3577b34da6a3ce929d0e0e4736";
-        assertThat(RequestContext.traceId("00-" + trace + "-00f067aa0ba902b7-01")).isEqualTo(trace);
+        assertThat(RequestContext.traceId("00-" + trace + "-00f067aa0ba902b7-01"))
+                .isEqualTo(trace);
     }
 
     @Test
     void aMissingOrBrokenTraceparentGivesANewTraceId() {
-        for (String bad : new String[] {null, "", "garbage", "00-" + "0".repeat(32) + "-00f067aa0ba902b7-01",
-                "00-4bf92f3577b34da6a3ce929d0e0e4736-" + "0".repeat(16) + "-01"}) {
+        for (String bad : new String[] {
+            null,
+            "",
+            "garbage",
+            "00-" + "0".repeat(32) + "-00f067aa0ba902b7-01",
+            "00-4bf92f3577b34da6a3ce929d0e0e4736-" + "0".repeat(16) + "-01"
+        }) {
             assertThat(RequestContext.traceId(bad)).matches("[0-9a-f]{32}").isNotEqualTo("0".repeat(32));
         }
     }

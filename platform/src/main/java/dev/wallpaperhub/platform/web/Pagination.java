@@ -7,8 +7,7 @@ public final class Pagination {
 
     public static final int MAX_SIZE = 100;
 
-    private Pagination() {
-    }
+    private Pagination() {}
 
     public static void requireValidSize(int size) {
         if (size > MAX_SIZE) {

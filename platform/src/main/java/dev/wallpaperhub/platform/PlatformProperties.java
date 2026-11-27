@@ -10,10 +10,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record PlatformProperties(String serviceName, String profile, Oidc oidc, Management management) {
 
     /** {@code OIDC_ISSUER_URI}, {@code OIDC_JWKS_URI}, {@code OIDC_CLIENT_ID} (which is also the audience of accepted tokens). */
-    public record Oidc(String issuerUri, String jwksUri, String clientId) {
-    }
+    public record Oidc(String issuerUri, String jwksUri, String clientId) {}
 
     /** {@code MGMT_PORT}, default 8081. */
-    public record Management(int port) {
-    }
+    public record Management(int port) {}
 }

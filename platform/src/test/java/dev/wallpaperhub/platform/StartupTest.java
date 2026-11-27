@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 
 class StartupTest {
@@ -22,7 +21,12 @@ class StartupTest {
 
     @Test
     void theErrorLineIsJsonAndNamesTheVariable() {
-        String line = Startup.errorLine("account-service", "missing or empty required environment variable(s): OIDC_ISSUER_URI");
-        assertThat(line).startsWith("{").endsWith("}").contains("\"level\":\"error\"").contains("OIDC_ISSUER_URI");
+        String line = Startup.errorLine(
+                "account-service", "missing or empty required environment variable(s): OIDC_ISSUER_URI");
+        assertThat(line)
+                .startsWith("{")
+                .endsWith("}")
+                .contains("\"level\":\"error\"")
+                .contains("OIDC_ISSUER_URI");
     }
 }

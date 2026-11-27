@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -41,7 +40,9 @@ class MessagesTest {
         Messages messages = Messages.load(JSON);
         assertThat(messages.has("problem.not-found.title")).isTrue();
         assertThat(messages.text("en", "problem.not-found.title", Map.of())).isEqualTo("Not found");
-        assertThat(messages.text("de", "problem.not-found.title", Map.of())).isNotEqualTo("Not found").isNotBlank();
+        assertThat(messages.text("de", "problem.not-found.title", Map.of()))
+                .isNotEqualTo("Not found")
+                .isNotBlank();
         assertThat(messages.text("fr", "problem.not-found.title", Map.of())).isEqualTo("Not found");
         assertThat(messages.text("en", "no.such.key", Map.of())).isEqualTo("no.such.key");
     }

@@ -1,7 +1,6 @@
 package dev.wallpaperhub.account;
 
 import dev.wallpaperhub.platform.security.PublicPaths;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -1,11 +1,9 @@
 package dev.wallpaperhub.platform.security;
 
-import java.io.IOException;
-
 import dev.wallpaperhub.platform.problem.ProblemWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import java.io.IOException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 

@@ -1,12 +1,10 @@
 package dev.wallpaperhub.account;
 
-import java.util.List;
-import java.util.Map;
-
 import dev.wallpaperhub.platform.problem.AppException;
 import dev.wallpaperhub.platform.web.Pagination;
 import jakarta.validation.Valid;
-
+import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
