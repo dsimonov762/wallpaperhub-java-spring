@@ -6,7 +6,7 @@ It is an implementation of [wallpaperhub-template](https://github.com/dsimonov76
 | Module | What it is | State |
 |---|---|---|
 | [`platform/`](platform) | what the services share: request id, problem+json and localization, JWT validation, JSON logs, the management port, fail-fast configuration | written, **not yet built by anyone** ([docs/STATUS.md](docs/STATUS.md)) |
-| [`account/`](account) | account-service ([WP-S1](https://github.com/dsimonov762/wallpaperhub-template/blob/master/docs/ROADMAP.md#wp-s1-account-service)) | a scaffold with three stand-in endpoints; no domain yet |
+| [`account/`](account) | account-service ([WP-S1](https://github.com/dsimonov762/wallpaperhub-template/blob/master/docs/ROADMAP.md#wp-s1-account-service)) | profiles on PostgreSQL (read, update with ETag, list, soft delete, outbox and audit rows); registration is still a stand-in. See [STATUS](docs/STATUS.md) |
 | `media/`, `catalog/`, `notification/` | WP-S2, S3, S4 | not started |
 
 ## Toolchain
