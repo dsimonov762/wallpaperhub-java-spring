@@ -49,6 +49,12 @@
 
   packageRules: [
     {
+      // The modules of this repository (the root pom as parent, platform, and the services to come) are built together, never published: nothing to look up.
+      matchManagers: ["maven"],
+      matchPackageNames: ["dev.wallpaperhub:*"],
+      enabled: false,
+    },
+    {
       // A new major of Spring Boot (or of Java) is a project, not a bump: it waits for approval on the dependency dashboard.
       matchPackageNames: ["org.springframework.boot:spring-boot-starter-parent"],
       matchUpdateTypes: ["major"],
