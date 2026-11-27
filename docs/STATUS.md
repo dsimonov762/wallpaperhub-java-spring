@@ -6,9 +6,9 @@
 
 The repository has the build, the `platform` module and an `account` module. The scaffold and the observability and quality increments are confirmed by the owner. The account core (profiles on PostgreSQL) is new and **has never been compiled**: see the WP-S1 section below.
 
-## WP-S1, increment 1 (account core): written, not run
+## WP-S1, increment 1 (account core): confirmed
 
-Branch `wp/s1-account-core`. **Verification: nothing was compiled or run** (the sandbox has no Maven Central and no Docker; only JDK 21 was there). The first `./mvnw verify` and the conformance run are the first real tests; expect compile errors and report them.
+Merged in pull request #6. **Confirmed** by the owner after `make fmt`: the local tests and CI pass (CI runs `make seed` and the conformance suite). `./mvnw verify` reported one Error Prone warning (`StringSplitter` in `UserSort`), fixed afterwards. Not yet exercised against a real database by anything but CI's conformance run: the update, delete, outbox and audit paths (no integration test yet; `e2e/system/10-account.hurl` has not been run against it).
 
 What it contains: `users` on JPA (`ddl-auto=validate`, the schema of `contracts/db-schema`), `GET /users/me`, `PATCH /users/me` (ETag and `If-Match`, optimistic lock), `GET /users/{id}`, `GET /users` (admin; `q`, `status`, `sort`), soft `DELETE /users/{id}` (owner or admin). Each change writes its `audit_log` row and, for a new display name and for a deletion, its `outbox_event` row in the same transaction (plain SQL through `JdbcClient`; the payload field names are tested against `contracts/avro`). `/health/ready` also checks PostgreSQL. `POST /registrations` stays a 501 stand-in. CI runs `make seed` before the conformance suite.
 
@@ -21,7 +21,7 @@ Known gaps, on purpose, for later increments:
 - Unknown JSON properties in a request body are ignored, not rejected (the contract says `additionalProperties: false`).
 - A non-numeric `page` or `size` gives the generic 400, not a field-specific one.
 - The nullable `avatarUrl` is written as plain JSON in the payload; whether the relay needs the Avro JSON union form is decided there.
-- Unverified details to look at first if something fails: `JdbcClient` with a `null` jsonb parameter, package-private `@Transactional` service methods under Spring 6/7 proxies, `JsonMapper` as an injectable bean in Boot 4.
+- Still unproven by a test: `JdbcClient` with a `null` jsonb parameter (audit rows of a deletion), the outbox insert, and the `PATCH` and `DELETE` paths on a real database; the conformance suite only reads.
 
 ## What exists
 

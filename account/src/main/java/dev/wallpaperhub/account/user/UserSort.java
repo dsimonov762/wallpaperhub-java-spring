@@ -23,9 +23,10 @@ final class UserSort {
             args.put("allowed", String.join(", ", ALLOWED));
             throw new AppException(400, "validation-failed", "pagination.sort-not-allowed", args);
         }
-        String[] parts = sort.split(",");
-        Sort.Direction direction = Sort.Direction.fromString(parts[1]);
+        // sort is one of ALLOWED, so it has exactly one comma
+        int comma = sort.indexOf(',');
+        Sort.Direction direction = Sort.Direction.fromString(sort.substring(comma + 1));
         // the id makes the order total, like the index users_created_idx (created_at DESC, id)
-        return Sort.by(new Sort.Order(direction, parts[0]), Sort.Order.asc("id"));
+        return Sort.by(new Sort.Order(direction, sort.substring(0, comma)), Sort.Order.asc("id"));
     }
 }
