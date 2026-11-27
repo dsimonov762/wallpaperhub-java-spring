@@ -11,5 +11,6 @@ The template's own [AGENTS.md](https://github.com/dsimonov762/wallpaperhub-templ
 6. **Nothing but JSON on stdout and stderr** (SERVICE-SPEC section 6). No `System.out.println`, no banner, and the JVM's own notices are avoided in `docker/entrypoint.sh`.
 7. **Secrets** come from the environment and never appear in a log line, an exception message or a problem response.
 8. **Be honest about verification.** Say what you ran (`./mvnw verify`, the conformance suite, on which machine) and what you did not. This repository was first written in an environment that could not compile Java: see [docs/STATUS.md](docs/STATUS.md).
-9. **Documentation is part of the change:** [docs/STATUS.md](docs/STATUS.md) and [docs/HISTORY.md](docs/HISTORY.md) in the same pull request.
-10. Pull requests: branch `wp/<id>-<short>` or `fix/<short>`, title `WP-<id>: ...` (it becomes the squash commit), CI job `ok` green.
+9. **Format before you commit:** `make fmt` (Spotless); `./mvnw verify` fails on unformatted code. Error Prone runs in every compilation: fix what it reports, or suppress that one check at the smallest scope with a comment saying why.
+10. **Documentation is part of the change:** [docs/STATUS.md](docs/STATUS.md) and [docs/HISTORY.md](docs/HISTORY.md) in the same pull request.
+11. Pull requests: branch `wp/<id>-<short>` or `fix/<short>`, title `WP-<id>: ...` (it becomes the squash commit), CI job `ok` green.

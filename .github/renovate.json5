@@ -27,6 +27,24 @@
       depNameTemplate: "io.opentelemetry.javaagent:opentelemetry-javaagent",
       datasourceTemplate: "maven",
     },
+    {
+      // Error Prone: a property of the root pom.xml (Spring Boot does not manage it).
+      customType: "regex",
+      description: "Error Prone",
+      managerFilePatterns: ["/^pom\\.xml$/"],
+      matchStrings: ["<error-prone\\.version>(?<currentValue>[^<]+)</error-prone\\.version>"],
+      depNameTemplate: "com.google.errorprone:error_prone_core",
+      datasourceTemplate: "maven",
+    },
+    {
+      // The formatter that Spotless runs: a property of the root pom.xml (the Spotless plugin itself is a plugin version, found by the maven manager).
+      customType: "regex",
+      description: "palantir-java-format",
+      managerFilePatterns: ["/^pom\\.xml$/"],
+      matchStrings: ["<palantir-java-format\\.version>(?<currentValue>[^<]+)</palantir-java-format\\.version>"],
+      depNameTemplate: "com.palantir.javaformat:palantir-java-format",
+      datasourceTemplate: "maven",
+    },
   ],
 
   packageRules: [
