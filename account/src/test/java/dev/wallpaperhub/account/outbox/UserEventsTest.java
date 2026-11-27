@@ -33,7 +33,8 @@ class UserEventsTest {
     void profileUpdatedMatchesItsSchema() throws IOException {
         OutboxMessage message = UserEvents.profileUpdated(EVENT, USER, "alice", "Alice", null, AT);
 
-        assertThat(message.payload().keySet()).containsExactlyInAnyOrderElementsOf(fields("account.user.profile-updated.v1.avsc"));
+        assertThat(message.payload().keySet())
+                .containsExactlyInAnyOrderElementsOf(fields("account.user.profile-updated.v1.avsc"));
         assertThat(message.payload()).containsEntry("occurredAt", AT.toEpochMilli());
         assertThat(message.topic()).isEqualTo("account.user.profile-updated.v1");
         assertThat(message.aggregateId()).isEqualTo(USER.toString());
@@ -43,7 +44,8 @@ class UserEventsTest {
     void deletedMatchesItsSchemaAndCarriesNoPersonalData() throws IOException {
         OutboxMessage message = UserEvents.deleted(EVENT, USER, AT);
 
-        assertThat(message.payload().keySet()).containsExactlyInAnyOrderElementsOf(fields("account.user.deleted.v1.avsc"));
+        assertThat(message.payload().keySet())
+                .containsExactlyInAnyOrderElementsOf(fields("account.user.deleted.v1.avsc"));
         assertThat(message.topic()).isEqualTo("account.user.deleted.v1");
     }
 

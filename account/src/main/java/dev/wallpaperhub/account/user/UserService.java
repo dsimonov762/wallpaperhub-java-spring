@@ -123,7 +123,9 @@ class UserService {
     }
 
     private UserEntity find(UUID id) {
-        return users.findById(id).filter(user -> !user.isDeleted()).orElseThrow(() -> AppException.notFound("user.not-found"));
+        return users.findById(id)
+                .filter(user -> !user.isDeleted())
+                .orElseThrow(() -> AppException.notFound("user.not-found"));
     }
 
     private void flush(UserEntity user) {

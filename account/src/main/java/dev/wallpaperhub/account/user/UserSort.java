@@ -10,7 +10,8 @@ import org.springframework.data.domain.Sort;
 final class UserSort {
 
     static final String DEFAULT = "createdAt,desc";
-    private static final List<String> ALLOWED = List.of("createdAt,desc", "createdAt,asc", "username,asc", "username,desc");
+    private static final List<String> ALLOWED =
+            List.of("createdAt,desc", "createdAt,asc", "username,asc", "username,desc");
 
     private UserSort() {}
 

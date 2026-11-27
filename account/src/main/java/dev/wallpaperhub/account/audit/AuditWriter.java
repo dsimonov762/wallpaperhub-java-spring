@@ -28,10 +28,10 @@ public class AuditWriter {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void record(UUID actorId, String action, String entityId, Map<String, Object> before, Map<String, Object> after) {
+    public void record(
+            UUID actorId, String action, String entityId, Map<String, Object> before, Map<String, Object> after) {
         String traceId = MDC.get("trace_id");
-        jdbc.sql(
-                        """
+        jdbc.sql("""
                         insert into audit_log (actor_id, action, entity_type, entity_id, before, after, trace_id)
                         values (:actorId, :action, 'user', :entityId, cast(:before as jsonb), cast(:after as jsonb), :traceId)
                         """)

@@ -56,7 +56,8 @@ class UserServiceTest {
     @Test
     void unknownAndDeletedUsersDoNotExist() {
         assertThatThrownBy(() -> service.get(BOB))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(404));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(404));
         alice.markDeleted(Instant.EPOCH);
         assertThatThrownBy(() -> service.get(ALICE)).isInstanceOf(AppException.class);
     }
@@ -119,14 +120,16 @@ class UserServiceTest {
         when(users.saveAndFlush(alice)).thenThrow(new ObjectOptimisticLockingFailureException(UserEntity.class, ALICE));
 
         assertThatThrownBy(() -> service.updateProfile(ALICE, request("Other", null), null))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(409));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(409));
         verifyNoInteractions(audit, outbox);
     }
 
     @Test
     void anotherUserMayNotDeleteYouAndIsRefusedBeforeTheLookup() {
         assertThatThrownBy(() -> service.delete(ALICE, BOB, false))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(403));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(403));
         verifyNoInteractions(users, outbox, audit);
     }
 

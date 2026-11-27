@@ -27,8 +27,7 @@ public class OutboxWriter {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void add(OutboxMessage message) {
-        jdbc.sql(
-                        """
+        jdbc.sql("""
                         insert into outbox_event (event_id, aggregate_type, aggregate_id, event_type, topic, payload, headers)
                         values (:eventId, 'user', :aggregateId, :eventType, :topic, cast(:payload as jsonb), cast(:headers as jsonb))
                         """)

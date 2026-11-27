@@ -24,10 +24,9 @@ class ETagsTest {
 
     @Test
     void aTagThatIsNotANumberNeverMatches() {
-        assertThatThrownBy(() -> ETags.expectedVersion("\"abc\""))
-                .isInstanceOfSatisfying(AppException.class, e -> {
-                    assertThat(e.status()).isEqualTo(409);
-                    assertThat(e.code()).isEqualTo("request.version-conflict");
-                });
+        assertThatThrownBy(() -> ETags.expectedVersion("\"abc\"")).isInstanceOfSatisfying(AppException.class, e -> {
+            assertThat(e.status()).isEqualTo(409);
+            assertThat(e.code()).isEqualTo("request.version-conflict");
+        });
     }
 }
