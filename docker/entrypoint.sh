@@ -7,10 +7,12 @@ unset JAVA_TOOL_OPTIONS
 # The OpenTelemetry Java agent reads the OTEL_* variables of the contract (endpoint, protocol, service name, intervals) and exports traces, logs and
 # metrics (SERVICE-SPEC section 8). OTEL_SDK_DISABLED=true starts the service without it. The agent's own log lines go through the application's
 # logger (JSON on stdout), and the JDK's warning for sun.misc.Unsafe (used by libraries inside the agent) would be a non-JSON line on stderr.
+# The agent also appends to the bootstrap class path, and the JVM then prints "Sharing is only supported for boot loader classes because bootstrap
+# classpath has been appended" (class data sharing), a non-JSON line (L1). -Xshare:off turns sharing off whenever the agent is attached.
 agent=/otel/opentelemetry-javaagent.jar
 agent_opts=""
 if [ "${OTEL_SDK_DISABLED:-false}" != true ] && [ -f "$agent" ]; then
-  agent_opts="-javaagent:$agent -Dotel.javaagent.logging=application --sun-misc-unsafe-memory-access=allow"
+  agent_opts="-javaagent:$agent -Dotel.javaagent.logging=application --sun-misc-unsafe-memory-access=allow -Xshare:off"
 fi
 # shellcheck disable=SC2086   # $opts and $agent_opts are lists of options on purpose
 exec java $opts $agent_opts -XX:+ExitOnOutOfMemoryError -jar /app/app.jar "$@"
