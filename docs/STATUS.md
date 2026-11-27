@@ -4,7 +4,24 @@
 
 ## In one paragraph
 
-The repository is the first increment of WP-S0 for Java: the build, the `platform` module and an `account` module with three stand-in endpoints, written so that the conformance suite of the template can run against it. **It was written in an environment that could not reach Maven Central, so nothing here has been compiled by its author.** The first `./mvnw verify` is the first build; expect a handful of compile errors (Spring Boot 4 renamed and moved many classes) and report them.
+The repository has the build, the `platform` module and an `account` module. The scaffold and the observability and quality increments are confirmed by the owner. The account core (profiles on PostgreSQL) is new and **has never been compiled**: see the WP-S1 section below.
+
+## WP-S1, increment 1 (account core): written, not run
+
+Branch `wp/s1-account-core`. **Verification: nothing was compiled or run** (the sandbox has no Maven Central and no Docker; only JDK 21 was there). The first `./mvnw verify` and the conformance run are the first real tests; expect compile errors and report them.
+
+What it contains: `users` on JPA (`ddl-auto=validate`, the schema of `contracts/db-schema`), `GET /users/me`, `PATCH /users/me` (ETag and `If-Match`, optimistic lock), `GET /users/{id}`, `GET /users` (admin; `q`, `status`, `sort`), soft `DELETE /users/{id}` (owner or admin). Each change writes its `audit_log` row and, for a new display name and for a deletion, its `outbox_event` row in the same transaction (plain SQL through `JdbcClient`; the payload field names are tested against `contracts/avro`). `/health/ready` also checks PostgreSQL. `POST /registrations` stays a 501 stand-in. CI runs `make seed` before the conformance suite.
+
+Known gaps, on purpose, for later increments:
+
+- Nothing publishes the outbox rows yet (the relay and the Avro producer are increment 3).
+- `avatarUrl` and `bannerUrl` are always `null`; avatar and banner need the media client.
+- Registration, the token endpoints, Redis cache-aside, the gRPC server, the purge job and the metrics of README section 11 are not started.
+- Deleting a user does not yet disable them in Keycloak.
+- Unknown JSON properties in a request body are ignored, not rejected (the contract says `additionalProperties: false`).
+- A non-numeric `page` or `size` gives the generic 400, not a field-specific one.
+- The nullable `avatarUrl` is written as plain JSON in the payload; whether the relay needs the Avro JSON union form is decided there.
+- Unverified details to look at first if something fails: `JdbcClient` with a `null` jsonb parameter, package-private `@Transactional` service methods under Spring 6/7 proxies, `JsonMapper` as an injectable bean in Boot 4.
 
 ## What exists
 
@@ -41,6 +58,6 @@ The first increment (build, `platform`, `account` scaffold, conformance without 
 
 ## Next
 
-1. First build and conformance run (the owner), fix what they show.
+1. Run increment 1: `make fmt`, `./mvnw verify`, then `make down && make up-obs && make seed && make run SVC=account && make conformance SVC=account ARGS="--lifecycle"`; send the output of whatever fails.
 2. Increment 2 part 2 (this change): run `make fmt`, commit the formatting diff, fix what Error Prone reports in `./mvnw verify`; then WP-S1.
-3. WP-S1: account-service proper (OpenAPI-generated DTOs, JPA with `ddl-auto=validate`, Redis, the gRPC server, outbox and relay, Keycloak admin client).
+3. WP-S1, next increments: Redis cache-aside and the gRPC server; the outbox relay with the Avro producer; the Keycloak admin client and registration; avatar and banner with media verification; token endpoints, purge job and metrics.

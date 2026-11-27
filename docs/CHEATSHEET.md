@@ -25,6 +25,7 @@ The commands of every day. `make help` lists the same with one line each; target
 ```
 make env                                   # once
 make up-obs                                # infrastructure and observability (about 6.5 GB); `make up` is the same without it (about 5 GB)
+make seed                                  # once per `make up`: the development users (alice, admin, ...); GET /users/me needs alice's row
 make run SVC=account                       # build the image, start it, wait for /health/ready
 make conformance SVC=account ARGS="--lifecycle"     # `--no-telemetry` when only `make up` is running
 make down

@@ -67,6 +67,9 @@ jobs:
       # With the observability stack: T1-T3 look for the request in Tempo, Loki and Prometheus (about 6.5 GB; the runner has 16 GB)
       - name: Infrastructure, schemas and observability
         run: make up-obs
+      # GET /users/me for alice needs her row in account's database (the seed gives the users the ids of their Keycloak subjects)
+      - name: Development data
+        run: make seed
       - name: Build and start the service
         env:
           SERVICE: ${{ matrix.service }}
