@@ -4,7 +4,7 @@ For people and AI agents. Read [README.md](README.md), then [docs/STATUS.md](doc
 The template's own [AGENTS.md](https://github.com/dsimonov762/wallpaperhub-template/blob/master/AGENTS.md) applies here too (one package per pull request, stay in your lane, be honest about verification); this file only adds what is specific to this repository.
 
 1. **The contract is the template's.** `contracts/` is a copy of the pinned version; never edit it (`make template-check` fails). Change a contract in the template, get a new tag, then move `.template-version` here.
-2. **A service is done when the conformance suite passes** against its container (`make run SVC=<name>`, `make conformance SVC=<name> ARGS="--lifecycle --no-telemetry"`), not when its unit tests pass.
+2. **A service is done when the conformance suite passes** against its container (`make run SVC=<name>`, `make conformance SVC=<name> ARGS="--lifecycle"` after `make up-obs`), not when its unit tests pass.
 3. **What the services share goes into `platform/`, what one service needs stays in its module.** Move code into `platform/` when the second service needs it, not before.
 4. **Versions are managed by Spring Boot.** Do not write a version next to a dependency Boot manages; to change one, change the Boot version or set a property in the parent POM with a comment saying why. Plugins: the same.
 5. **No schema of its own.** A service never creates tables: the schema is `contracts/db-schema`, applied by `make schemas` (SERVICE-SPEC section 9). Hibernate runs with `ddl-auto=validate`, there is no Flyway.

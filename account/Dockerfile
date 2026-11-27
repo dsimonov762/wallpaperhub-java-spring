@@ -8,6 +8,8 @@ COPY .mvn .mvn
 COPY mvnw pom.xml ./
 COPY platform/pom.xml platform/pom.xml
 COPY account/pom.xml account/pom.xml
+# The OpenTelemetry Java agent (version: a property of the root POM) in its own layer: a code change does not download it again.
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp -q -N dependency:copy
 COPY contracts/i18n contracts/i18n
 COPY platform/src platform/src
 COPY account/src account/src
@@ -17,6 +19,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp -q -pl account -am -Dskip
 FROM eclipse-temurin:25.0.5.1_2-jre-noble
 # No HEALTHCHECK and no Compose healthcheck: the template waits from the host (scripts/wait-ready.sh polls /health/ready on the management port).
 COPY --from=build /src/account/target/account.jar /app/app.jar
+COPY --from=build /src/target/otel/opentelemetry-javaagent.jar /otel/opentelemetry-javaagent.jar
 COPY docker/entrypoint.sh /app/entrypoint.sh
 USER 10001:10001
 EXPOSE 8080 8081

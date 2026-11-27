@@ -24,11 +24,13 @@ The template is pinned in [`.template-version`](.template-version) and checked o
 
 ```
 make env                                   # once: creates .template/infra/.env
-make up                                    # databases, Kafka, Keycloak, ... (about 5 GB)
-make run SVC=account                       # build the image from this repository and start it
-make conformance SVC=account ARGS="--lifecycle --no-telemetry"
+make up-obs                                # databases, Kafka, Keycloak, ... and Grafana, Loki, Tempo, Prometheus, Alloy (about 6.5 GB)
+make run SVC=account                       # build the image from this repository, start it, wait for /health/ready
+make conformance SVC=account ARGS="--lifecycle"
 make down
 ```
+
+With `make up` instead of `make up-obs` (about 5 GB) add `--no-telemetry`: the checks T1-T3 then do not look for the request in Tempo, Loki and Prometheus. The service exports its telemetry with the OpenTelemetry Java agent ([docs/CHEATSHEET.md](docs/CHEATSHEET.md)).
 
 `make conformance` is the acceptance test of a service; CI runs the same steps ([`.github/workflows/ci.yml`](.github/workflows/ci.yml), the required check is the job `ok`).
 

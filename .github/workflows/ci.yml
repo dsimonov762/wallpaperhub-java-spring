@@ -64,9 +64,9 @@ jobs:
           fi
           hurl --version
       - run: make env
-      # Without the observability stack (T1-T3 are checked once OpenTelemetry is in: docs/ROADMAP.md of the template, WP-S0 increment 2)
-      - name: Infrastructure and schemas
-        run: make up
+      # With the observability stack: T1-T3 look for the request in Tempo, Loki and Prometheus (about 6.5 GB; the runner has 16 GB)
+      - name: Infrastructure, schemas and observability
+        run: make up-obs
       - name: Build and start the service
         env:
           SERVICE: ${{ matrix.service }}
@@ -74,7 +74,7 @@ jobs:
       - name: Conformance
         env:
           SERVICE: ${{ matrix.service }}
-        run: make conformance SVC="$SERVICE" ARGS="--lifecycle --no-telemetry"
+        run: make conformance SVC="$SERVICE" ARGS="--lifecycle"
       - name: Collect logs
         if: failure()
         run: .template/scripts/ci/collect-logs.sh ci-logs

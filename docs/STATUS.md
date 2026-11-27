@@ -1,6 +1,6 @@
 # Status
 
-**As of 2026-11-26.** Update this file in the same change as the work it describes. Verification levels: **Confirmed** (the owner ran it, or CI is green), **Sandbox** (run for real by an AI agent, not on the owner's machine), **Design only** (written, never run).
+**As of 2026-11-27.** Update this file in the same change as the work it describes. Verification levels: **Confirmed** (the owner ran it, or CI is green), **Sandbox** (run for real by an AI agent, not on the owner's machine), **Design only** (written, never run).
 
 ## In one paragraph
 
@@ -8,8 +8,11 @@ The repository is the first increment of WP-S0 for Java: the build, the `platfor
 
 ## What exists
 
+The first increment (build, `platform`, `account` scaffold, conformance without T1-T3) is **Confirmed** by the owner: `./mvnw verify` passes and `make run SVC=account` + `make conformance SVC=account ARGS="--lifecycle --no-telemetry"` pass, locally and in CI (template v0.1.2). The rows below were written before that run; the OpenTelemetry row is new.
+
 | Piece | Level | Notes |
 |---|---|---|
+| OpenTelemetry (increment 2): Java agent 2.33.1 fetched by `./mvnw -N dependency:copy` in `account/Dockerfile`, started by `docker/entrypoint.sh`; `opentelemetry-api` in `platform`; the request filter takes trace and span id of the active span; CI runs `make up-obs` and T1-T3 | Design only | nothing of it was run: the sandbox has no Docker and no Maven Central. The unit test of the filter and the three checks T1-T3 are the first run |
 | Parent POM (Boot 4.2.0, Java 25), Maven wrapper 3.3.4 with Maven 3.9.16 | Design only | the wrapper scripts are the ones of the 3.3.4 release of Apache Maven Wrapper, taken from its source tag; the plugin that normally generates them could not run |
 | `contracts/` vendored from the template; `scripts/template.sh sync/ensure/check`; forwarding `Makefile` | **Sandbox** | the script and the Makefile ran against a local clone of the template; the tag `v0.1.0` does not exist yet |
 | The logic of request ids, trace ids, `Accept-Language`, placeholder formatting | **Sandbox** | those classes were compiled with JDK 21 and run on their own; the placeholder formatter passes all 14 cases of `contracts/i18n/format-tests.json` |
@@ -21,7 +24,7 @@ The repository is the first increment of WP-S0 for Java: the build, the `platfor
 
 1. `./mvnw verify`: compiles, unit tests pass.
 2. `make template-check` (after the template tag exists, or with `.template-version` set to `master`).
-3. `make run SVC=account` and `make conformance SVC=account ARGS="--lifecycle --no-telemetry"`: expected to pass M1-M4, C1, A1-A4, E1-E6, L1-L3, S1; T1-T3 are skipped (no OpenTelemetry yet). If a check fails, that is the finding: send the output.
+3. `make run SVC=account` and `make conformance SVC=account ARGS="--lifecycle --no-telemetry"`: expected to pass M1-M4, C1, A1-A4, E1-E6, L1-L3, S1; T1-T3 pass with `make up-obs` and are skipped with `--no-telemetry`. If a check fails, that is the finding: send the output.
 
 ## Decisions taken here (and why)
 
@@ -29,11 +32,12 @@ The repository is the first increment of WP-S0 for Java: the build, the `platfor
 - **`@PlatformApplication` instead of an auto-configuration.** The security filter chain must exist before Spring Boot decides whether to create its default one; user configuration is processed first.
 - **Environment checked before Spring starts** ([`Startup`](../platform/src/main/java/dev/wallpaperhub/platform/Startup.java)): Spring's binding errors name properties, not variables, and accept empty values; C1 requires the variable's name.
 - **`JAVA_TOOL_OPTIONS` read by the entrypoint** ([`docker/entrypoint.sh`](../docker/entrypoint.sh)): the JVM otherwise prints a non-JSON notice on stderr.
-- **No trace propagation yet.** The trace id is taken from `traceparent` or generated (E2, L2); real spans arrive with OpenTelemetry.
+- **OpenTelemetry through the Java agent, not through Spring Boot's own OTLP export.** The contract gives `OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317` with `grpc` for all signals; Boot's metrics export (Micrometer's OTLP registry) speaks HTTP only and would need another port and a convention switch for the metric name `http.server.request.duration` that T3 looks for. The agent reads the contract's `OTEL_*` variables as they are, names metrics by the OpenTelemetry conventions, and also gives the database, Kafka and gRPC spans that WP-S1 will need without code. Cost: about 100 MB more memory (watch `mem_limit: 640m` of the template's `x-app`; if the container is OOM-killed, raise it in the template) and a few seconds of start-up. `OTEL_SDK_DISABLED=true` starts the service without the agent. The agent's version is a property of the root POM (Renovate moves it; agent 3.x needs approval, it changes defaults).
+- **`platform` knows only `opentelemetry-api`.** The filter reads `Span.current()`: with the agent the trace id in logs and in `problem+json` is the one of the real span (it continues the incoming `traceparent`); without it (unit tests, the IDE without the agent) the old fallback applies. The agent also puts `trace_id` and `span_id` into the MDC; the filter sets the same values.
 - **Finding for the template:** README 5.3 has no problem type for HTTP 405; `forbidden` is used.
 
 ## Next
 
 1. First build and conformance run (the owner), fix what they show.
-2. Increment 2: OpenTelemetry (T1-T3; `OTEL_*` variables to Spring Boot's OTLP export, trace ids from the active span), formatter and linter (Spotless, Checkstyle, ErrorProne with versions taken from Maven Central at that time), `docs/CHEATSHEET.md`.
+2. Increment 2: OpenTelemetry (written, waits for its first run: `make down && make up-obs && make run SVC=account && make conformance SVC=account ARGS="--lifecycle"`); then formatter and linter (Spotless, Checkstyle, ErrorProne with versions taken from Maven Central at that time) as a separate pull request, so a formatting diff does not hide a telemetry fix.
 3. WP-S1: account-service proper (OpenAPI-generated DTOs, JPA with `ddl-auto=validate`, Redis, the gRPC server, outbox and relay, Keycloak admin client).

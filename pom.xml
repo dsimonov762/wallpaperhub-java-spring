@@ -23,6 +23,9 @@
   <properties>
     <java.version>25</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- The OpenTelemetry Java agent is not a library of the services but a file next to them (account/Dockerfile, make otel-agent): Spring Boot does not
+         manage it, so its version is written here, and Renovate moves it (.github/renovate.json5). Agent 3.x changes telemetry defaults: read its notes first. -->
+    <opentelemetry-javaagent.version>2.33.1</opentelemetry-javaagent.version>
   </properties>
 
   <modules>
@@ -30,6 +33,30 @@
     <module>account</module>
     <!-- media, catalog and notification are added by WP-S2, WP-S3 and WP-S4 -->
   </modules>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <!-- Used only as `./mvnw -N dependency:copy` (make otel-agent, account/Dockerfile): puts the agent in target/otel/. It is bound to no lifecycle phase. -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <artifactItems>
+              <artifactItem>
+                <groupId>io.opentelemetry.javaagent</groupId>
+                <artifactId>opentelemetry-javaagent</artifactId>
+                <version>${opentelemetry-javaagent.version}</version>
+                <type>jar</type>
+                <destFileName>opentelemetry-javaagent.jar</destFileName>
+              </artifactItem>
+            </artifactItems>
+            <outputDirectory>${project.build.directory}/otel</outputDirectory>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
   <dependencyManagement>
     <dependencies>

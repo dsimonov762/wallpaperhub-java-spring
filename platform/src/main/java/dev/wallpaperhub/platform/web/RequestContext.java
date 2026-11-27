@@ -44,7 +44,7 @@ public final class RequestContext {
         return randomHex(32);
     }
 
-    /** A span id for this request (this service is not a tracer yet; OpenTelemetry replaces it, see ROADMAP). */
+    /** A span id for a request that no tracer saw (no OpenTelemetry Java agent: unit tests, a run in the IDE). */
     public static String newSpanId() {
         return randomHex(16);
     }

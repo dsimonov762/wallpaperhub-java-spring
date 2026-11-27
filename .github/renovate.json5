@@ -18,12 +18,27 @@
       depNameTemplate: "dsimonov762/wallpaperhub-template",
       datasourceTemplate: "github-tags",
     },
+    {
+      // The OpenTelemetry Java agent: a property of the root pom.xml (Spring Boot does not manage it).
+      customType: "regex",
+      description: "the OpenTelemetry Java agent",
+      managerFilePatterns: ["/^pom\\.xml$/"],
+      matchStrings: ["<opentelemetry-javaagent\\.version>(?<currentValue>[^<]+)</opentelemetry-javaagent\\.version>"],
+      depNameTemplate: "io.opentelemetry.javaagent:opentelemetry-javaagent",
+      datasourceTemplate: "maven",
+    },
   ],
 
   packageRules: [
     {
       // A new major of Spring Boot (or of Java) is a project, not a bump: it waits for approval on the dependency dashboard.
       matchPackageNames: ["org.springframework.boot:spring-boot-starter-parent"],
+      matchUpdateTypes: ["major"],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Agent 3.0 changes telemetry, configuration and instrumentation defaults: a project, not a bump.
+      matchPackageNames: ["io.opentelemetry.javaagent:opentelemetry-javaagent"],
       matchUpdateTypes: ["major"],
       dependencyDashboardApproval: true,
     },

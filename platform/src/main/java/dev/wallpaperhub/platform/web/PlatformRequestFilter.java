@@ -2,6 +2,8 @@ package dev.wallpaperhub.platform.web;
 
 import java.io.IOException;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,8 +16,9 @@ import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * The first filter of the API port. Per request: the request id (E6, echoed in the response), the trace id of the incoming
- * {@code traceparent} or a new one (E2), the MDC fields of the JSON log (L1, L2), {@code X-Content-Type-Options}, and one
+ * The first filter of the API port. Per request: the request id (E6, echoed in the response), the trace and span id (E2) of the span
+ * that the OpenTelemetry Java agent opened for the request (it continues the incoming {@code traceparent}); without an agent (unit
+ * tests, a run in the IDE) the trace id of the {@code traceparent} or a new one, the MDC fields of the JSON log (L1, L2), {@code X-Content-Type-Options}, and one
  * access-log line at {@code info} (method, path without the query string, status, duration; SERVICE-SPEC section 6).
  */
 public final class PlatformRequestFilter extends OncePerRequestFilter implements Ordered {
@@ -32,8 +35,16 @@ public final class PlatformRequestFilter extends OncePerRequestFilter implements
             throws ServletException, IOException {
         long start = System.nanoTime();
         String requestId = RequestContext.requestId(request.getHeader("X-Request-Id"));
-        String traceId = RequestContext.traceId(request.getHeader("traceparent"));
-        String spanId = RequestContext.newSpanId();
+        SpanContext span = Span.current().getSpanContext();
+        String traceId;
+        String spanId;
+        if (span.isValid()) {
+            traceId = span.getTraceId();
+            spanId = span.getSpanId();
+        } else {
+            traceId = RequestContext.traceId(request.getHeader("traceparent"));
+            spanId = RequestContext.newSpanId();
+        }
         request.setAttribute(RequestContext.REQUEST_ID, requestId);
         request.setAttribute(RequestContext.TRACE_ID, traceId);
         request.setAttribute(RequestContext.SPAN_ID, spanId);

@@ -14,7 +14,7 @@ COMPOSE := docker compose --project-directory $(TEMPLATE)/infra -f $(TEMPLATE)/i
 export ACCOUNT_DIR := $(CURDIR)
 export ACCOUNT_DOCKERFILE := account/Dockerfile
 
-.PHONY: help build test package clean fmt template-sync template-check run github-plan github-apply github-check
+.PHONY: help build test package clean fmt otel-agent template-sync template-check run github-plan github-apply github-check
 
 help: ## this list, then the template's
 	@echo "wallpaperhub-java-spring (template pinned to $$(cat .template-version))"
@@ -33,6 +33,10 @@ package: ## jars without tests
 
 clean: ## remove target/ folders
 	$(MVNW) clean
+
+otel-agent: ## download the OpenTelemetry Java agent to target/otel/ (to run a service in the IDE with telemetry: docs/CHEATSHEET.md)
+	$(MVNW) -N dependency:copy
+	@echo "VM option for the IDE: -javaagent:$(CURDIR)/target/otel/opentelemetry-javaagent.jar"
 
 template-sync: ## fetch the pinned template and refresh contracts/
 	scripts/template.sh sync

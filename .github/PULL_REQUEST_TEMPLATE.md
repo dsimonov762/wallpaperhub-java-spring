@@ -5,7 +5,7 @@
 ## Checklist
 
 - [ ] `make build` passes (`./mvnw verify`)
-- [ ] `make conformance SVC=<service> ARGS="--lifecycle --no-telemetry"` passes for the service I touched (needs `make up` and `make run SVC=<service>`), or I say why not
+- [ ] `make conformance SVC=<service> ARGS="--lifecycle"` passes for the service I touched (needs `make up-obs` and `make run SVC=<service>`; `--no-telemetry` with `make up` skips T1-T3), or I say why not
 - [ ] `contracts/` is untouched (a contract changes in the template first; `make template-check` passes)
 - [ ] Documentation (`docs/STATUS.md`, `docs/HISTORY.md`) is updated
 
