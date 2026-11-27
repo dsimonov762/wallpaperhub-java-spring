@@ -1,12 +1,11 @@
 package dev.wallpaperhub.platform.problem;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import dev.wallpaperhub.platform.web.Language;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Writes a problem+json response from code that runs outside Spring MVC (the security filters). */

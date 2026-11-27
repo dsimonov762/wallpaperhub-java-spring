@@ -1,13 +1,11 @@
 package dev.wallpaperhub.platform.security;
 
-import java.io.IOException;
-
 import dev.wallpaperhub.platform.web.RequestContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import java.io.IOException;
 import org.slf4j.MDC;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,7 +19,8 @@ public final class UserContextFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean known = authentication != null && authentication.isAuthenticated()
+        boolean known = authentication != null
+                && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
         if (known) {
             request.setAttribute(RequestContext.USER_ID, authentication.getName());

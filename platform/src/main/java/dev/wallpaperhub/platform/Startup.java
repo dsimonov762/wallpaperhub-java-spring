@@ -6,7 +6,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -20,11 +19,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 public final class Startup {
 
     /** Required by every service; a service adds its own (database, Kafka, ...) to this list. */
-    public static final List<String> COMMON_REQUIRED = List.of(
-            "OIDC_ISSUER_URI", "OIDC_JWKS_URI", "OIDC_CLIENT_ID", "OTEL_SERVICE_NAME", "APP_PROFILE");
+    public static final List<String> COMMON_REQUIRED =
+            List.of("OIDC_ISSUER_URI", "OIDC_JWKS_URI", "OIDC_CLIENT_ID", "OTEL_SERVICE_NAME", "APP_PROFILE");
 
-    private Startup() {
-    }
+    private Startup() {}
 
     public static ConfigurableApplicationContext run(Class<?> application, String[] args, String... serviceRequired) {
         Set<String> required = new LinkedHashSet<>(COMMON_REQUIRED);
@@ -32,7 +30,8 @@ public final class Startup {
         List<String> missing = missing(System::getenv, required);
         if (!missing.isEmpty()) {
             String service = System.getenv("OTEL_SERVICE_NAME");
-            System.err.println(errorLine(service == null || service.isBlank() ? application.getSimpleName() : service,
+            System.err.println(errorLine(
+                    service == null || service.isBlank() ? application.getSimpleName() : service,
                     "missing or empty required environment variable(s): " + String.join(", ", missing)));
             System.exit(1);
         }
@@ -59,7 +58,8 @@ public final class Startup {
 
     private static String json(String s) {
         StringBuilder sb = new StringBuilder(s.length() + 8);
-        for (char c : s.toCharArray()) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
             switch (c) {
                 case '"' -> sb.append("\\\"");
                 case '\\' -> sb.append("\\\\");

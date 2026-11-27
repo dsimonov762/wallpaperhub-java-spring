@@ -34,6 +34,9 @@ package: ## jars without tests
 clean: ## remove target/ folders
 	$(MVNW) clean
 
+fmt: ## format the Java code (Spotless, palantir-java-format); `make build` fails on unformatted code
+	$(MVNW) spotless:apply
+
 otel-agent: ## download the OpenTelemetry Java agent to target/otel/ (to run a service in the IDE with telemetry: docs/CHEATSHEET.md)
 	$(MVNW) -N dependency:copy
 	@echo "VM option for the IDE: -javaagent:$(CURDIR)/target/otel/opentelemetry-javaagent.jar"

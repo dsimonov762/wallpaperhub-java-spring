@@ -1,11 +1,10 @@
 package dev.wallpaperhub.platform.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 /** Per-request identifiers: request id (E6), trace id and span id (E2, L2). Set by {@link PlatformRequestFilter}. */
 public final class RequestContext {
@@ -19,11 +18,11 @@ public final class RequestContext {
     private static final Pattern PLAIN_ID = Pattern.compile("[A-Za-z0-9._:-]{1,128}");
     /** W3C Trace Context, version 00: 00-&lt;32 hex trace id&gt;-&lt;16 hex parent id&gt;-&lt;2 hex flags&gt;. */
     private static final Pattern TRACEPARENT = Pattern.compile("00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}");
+
     private static final String ZERO_TRACE = "0".repeat(32);
     private static final String ZERO_SPAN = "0".repeat(16);
 
-    private RequestContext() {
-    }
+    private RequestContext() {}
 
     /** The caller's {@code X-Request-Id} when it is a plain id, otherwise a new one. */
     public static String requestId(String header) {

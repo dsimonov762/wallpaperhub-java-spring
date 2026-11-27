@@ -10,5 +10,4 @@ public record RegistrationRequest(
         @NotBlank @Email @Size(max = 254) String email,
         @NotBlank @Size(min = 8, max = 128) String password,
         @NotBlank @Size(min = 1, max = 64) String displayName,
-        String locale) {
-}
+        String locale) {}

@@ -1,14 +1,13 @@
 package dev.wallpaperhub.platform.logging;
 
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
-import java.util.Map;
-
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import ch.qos.logback.core.LayoutBase;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * One JSON object per line with the fields of SERVICE-SPEC section 6: {@code timestamp} (RFC 3339, UTC, milliseconds),

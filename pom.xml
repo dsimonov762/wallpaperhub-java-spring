@@ -26,6 +26,11 @@
     <!-- The OpenTelemetry Java agent is not a library of the services but a file next to them (account/Dockerfile, make otel-agent): Spring Boot does not
          manage it, so its version is written here, and Renovate moves it (.github/renovate.json5). Agent 3.x changes telemetry defaults: read its notes first. -->
     <opentelemetry-javaagent.version>2.33.1</opentelemetry-javaagent.version>
+    <!-- Code quality tools that Spring Boot does not manage (its own plugins are in the parent): Renovate moves these three (.github/renovate.json5).
+         Error Prone and the formatter run inside the build's JVM, which needs the add-exports options of .mvn/jvm.config on JDK 16 and later. -->
+    <spotless-maven-plugin.version>3.11.0</spotless-maven-plugin.version>
+    <palantir-java-format.version>2.90.0</palantir-java-format.version>
+    <error-prone.version>2.53.0</error-prone.version>
   </properties>
 
   <modules>
@@ -37,6 +42,49 @@
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <!-- Error Prone (https://errorprone.info) checks every compilation, main and test code: a bug pattern of severity ERROR fails the build, warnings are
+               printed. A false positive is suppressed at the smallest scope with @SuppressWarnings("CheckName") and a comment saying why. -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <compilerArgs>
+              <arg>-XDcompilePolicy=simple</arg>
+              <arg>--should-stop=ifError=FLOW</arg>
+              <arg>-Xplugin:ErrorProne</arg>
+            </compilerArgs>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>${error-prone.version}</version>
+              </path>
+            </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+        <plugin>
+          <!-- Formatting: `make fmt` rewrites the Java files (spotless:apply), `./mvnw verify` fails when one is not formatted (spotless:check). -->
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless-maven-plugin.version}</version>
+          <configuration>
+            <java>
+              <palantirJavaFormat>
+                <version>${palantir-java-format.version}</version>
+              </palantirJavaFormat>
+              <removeUnusedImports/>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </java>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
         <plugin>
           <!-- Used only as `./mvnw -N dependency:copy` (make otel-agent, account/Dockerfile): puts the agent in target/otel/. It is bound to no lifecycle phase. -->
           <groupId>org.apache.maven.plugins</groupId>
@@ -56,6 +104,12 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencyManagement>

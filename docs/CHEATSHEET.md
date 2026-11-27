@@ -11,6 +11,14 @@ The commands of every day. `make help` lists the same with one line each; target
 | jars without tests | `make package` |
 | one module, with what it needs | `./mvnw -pl account -am verify` |
 | one test class | `./mvnw -pl platform -Dtest=PlatformRequestFilterTest test` |
+| format the code | `make fmt` (Spotless, palantir-java-format); `make build` fails on unformatted code |
+| build without the formatting check | `./mvnw verify -Dspotless.check.skip=true` (only to look at a test while you work; CI checks it) |
+
+## Code quality
+
+- **Spotless** (`make fmt`) formats Java: palantir-java-format, 4 spaces, 120 columns, unused imports removed. Run it before you commit; the IDE can use the same formatter (IntelliJ: the "palantir-java-format" plugin).
+- **Error Prone** runs inside every compilation (main and test code). A message "[CheckName] ..." with `error:` fails the build, `warning:` is only printed; the link in the message explains the check. If it is a false positive: `@SuppressWarnings("CheckName")` on the smallest element, with a comment saying why.
+- Both need the `add-exports` options of `.mvn/jvm.config`; they apply to Maven started through `./mvnw`. In the IDE, if its own Maven runs the build, give it the same options (IntelliJ: Settings, Build Tools, Maven, Runner, VM options, or let it use the wrapper).
 
 ## Run a service in Docker and check it
 

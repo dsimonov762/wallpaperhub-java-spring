@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,15 +22,15 @@ public final class JwtValidation {
 
     private static final Duration CLOCK_SKEW = Duration.ofSeconds(30);
 
-    private JwtValidation() {
-    }
+    private JwtValidation() {}
 
     public static OAuth2TokenValidator<Jwt> validator(String issuer, String audience) {
         return new DelegatingOAuth2TokenValidator<>(
-                new JwtTimestampValidator(CLOCK_SKEW),                       // exp and nbf
+                new JwtTimestampValidator(CLOCK_SKEW), // exp and nbf
                 new JwtIssuerValidator(issuer),
-                new JwtClaimValidator<Collection<String>>(JwtClaimNames.AUD, aud -> aud != null && aud.contains(audience)),
-                new JwtClaimValidator<String>("typ", "Bearer"::equals));     // not an ID or refresh token
+                new JwtClaimValidator<Collection<String>>(
+                        JwtClaimNames.AUD, aud -> aud != null && aud.contains(audience)),
+                new JwtClaimValidator<String>("typ", "Bearer"::equals)); // not an ID or refresh token
     }
 
     /** Keycloak puts the realm roles in {@code realm_access.roles}; they become {@code ROLE_<name>}. */

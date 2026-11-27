@@ -1,7 +1,5 @@
 package dev.wallpaperhub.platform;
 
-import java.util.List;
-
 import dev.wallpaperhub.platform.i18n.Messages;
 import dev.wallpaperhub.platform.management.JwksReadiness;
 import dev.wallpaperhub.platform.management.ManagementServer;
@@ -15,7 +13,7 @@ import dev.wallpaperhub.platform.security.ProblemAuthenticationEntryPoint;
 import dev.wallpaperhub.platform.security.PublicPaths;
 import dev.wallpaperhub.platform.security.UserContextFilter;
 import dev.wallpaperhub.platform.web.PlatformRequestFilter;
-
+import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -76,34 +74,38 @@ class PlatformConfiguration {
 
     @Bean
     JwtDecoder jwtDecoder(PlatformProperties properties) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(properties.oidc().jwksUri()).build();
-        decoder.setJwtValidator(JwtValidation.validator(properties.oidc().issuerUri(), properties.oidc().clientId()));
+        NimbusJwtDecoder decoder =
+                NimbusJwtDecoder.withJwkSetUri(properties.oidc().jwksUri()).build();
+        decoder.setJwtValidator(JwtValidation.validator(
+                properties.oidc().issuerUri(), properties.oidc().clientId()));
         return decoder;
     }
 
     @Bean
-    SecurityFilterChain apiSecurity(HttpSecurity http, JwtDecoder decoder, ProblemWriter writer,
-                                    ObjectProvider<PublicPaths> publicPaths) throws Exception {
+    SecurityFilterChain apiSecurity(
+            HttpSecurity http, JwtDecoder decoder, ProblemWriter writer, ObjectProvider<PublicPaths> publicPaths)
+            throws Exception {
         ProblemAuthenticationEntryPoint entryPoint = new ProblemAuthenticationEntryPoint(writer);
         ProblemAccessDeniedHandler deniedHandler = new ProblemAccessDeniedHandler(writer);
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> {
-                    publicPaths.orderedStream()
-                            .forEach(paths -> paths.patterns().forEach(pattern -> authorize.requestMatchers(pattern).permitAll()));
+                    publicPaths
+                            .orderedStream()
+                            .forEach(paths -> paths.patterns()
+                                    .forEach(pattern ->
+                                            authorize.requestMatchers(pattern).permitAll()));
                     authorize.anyRequest().authenticated();
                 })
-                .oauth2ResourceServer(resource -> resource
-                        .jwt(jwt -> jwt.decoder(decoder).jwtAuthenticationConverter(JwtValidation.converter()))
+                .oauth2ResourceServer(resource -> resource.jwt(
+                                jwt -> jwt.decoder(decoder).jwtAuthenticationConverter(JwtValidation.converter()))
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(deniedHandler))
-                .exceptionHandling(errors -> errors
-                        .authenticationEntryPoint(entryPoint)
-                        .accessDeniedHandler(deniedHandler))
+                .exceptionHandling(
+                        errors -> errors.authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler))
                 .addFilterAfter(new UserContextFilter(), BearerTokenAuthenticationFilter.class);
         return http.build();
     }

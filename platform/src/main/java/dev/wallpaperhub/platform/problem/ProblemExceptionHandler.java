@@ -1,17 +1,15 @@
 package dev.wallpaperhub.platform.problem;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import dev.wallpaperhub.platform.i18n.Messages;
 import dev.wallpaperhub.platform.web.Language;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -56,8 +54,8 @@ public class ProblemExceptionHandler {
         String lang = Language.of(request.getHeader("Accept-Language"));
         List<Problems.FieldIssue> issues = new ArrayList<>();
         for (FieldError error : e.getBindingResult().getFieldErrors()) {
-            ConstraintViolation<?> violation = error.contains(ConstraintViolation.class)
-                    ? error.unwrap(ConstraintViolation.class) : null;
+            ConstraintViolation<?> violation =
+                    error.contains(ConstraintViolation.class) ? error.unwrap(ConstraintViolation.class) : null;
             issues.add(issue(lang, error.getField(), error.getCode(), violation));
         }
         return respond(request, 400, "validation-failed", null, Map.of(), issues);
@@ -68,14 +66,21 @@ public class ProblemExceptionHandler {
         String lang = Language.of(request.getHeader("Accept-Language"));
         List<Problems.FieldIssue> issues = new ArrayList<>();
         for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
-            String code = violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName();
+            String code = violation
+                    .getConstraintDescriptor()
+                    .getAnnotation()
+                    .annotationType()
+                    .getSimpleName();
             issues.add(issue(lang, violation.getPropertyPath().toString(), code, violation));
         }
         return respond(request, 400, "validation-failed", null, Map.of(), issues);
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestParameterException.class,
-            MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+        HttpMessageNotReadableException.class,
+        MissingServletRequestParameterException.class,
+        MethodArgumentTypeMismatchException.class
+    })
     ResponseEntity<Map<String, Object>> malformed(Exception e, HttpServletRequest request) {
         return respond(request, 400, "validation-failed", null, Map.of(), List.of());
     }
@@ -87,7 +92,8 @@ public class ProblemExceptionHandler {
 
     /** README 5.3 has no type for 405; {@code forbidden} ("not permitted") is the closest. A finding for the template. */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    ResponseEntity<Map<String, Object>> wrongMethod(HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
+    ResponseEntity<Map<String, Object>> wrongMethod(
+            HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
         ResponseEntity<Map<String, Object>> response = respond(request, 405, "forbidden", null, Map.of(), List.of());
         Set<HttpMethod> allowed = e.getSupportedHttpMethods();
         if (allowed == null || allowed.isEmpty()) {
@@ -131,7 +137,9 @@ public class ProblemExceptionHandler {
         Messages messages = problems.messages();
         String shortName = field.contains(".") ? field.substring(field.lastIndexOf('.') + 1) : field;
         Map<String, Object> args = new LinkedHashMap<>();
-        args.put("field", messages.has("field." + shortName) ? messages.text(lang, "field." + shortName, Map.of()) : shortName);
+        args.put(
+                "field",
+                messages.has("field." + shortName) ? messages.text(lang, "field." + shortName, Map.of()) : shortName);
         if (violation != null) {
             Map<String, Object> attributes = violation.getConstraintDescriptor().getAttributes();
             for (String name : List.of("min", "max")) {
@@ -147,12 +155,19 @@ public class ProblemExceptionHandler {
             }
         }
         String key = "validation." + code;
-        String message = messages.has(key) ? messages.text(lang, key, args) : messages.text(lang, "problem.validation-failed.detail", args);
+        String message = messages.has(key)
+                ? messages.text(lang, key, args)
+                : messages.text(lang, "problem.validation-failed.detail", args);
         return new Problems.FieldIssue(field, code, message);
     }
 
-    private ResponseEntity<Map<String, Object>> respond(HttpServletRequest request, int status, String slug, String code,
-                                                         Map<String, ?> args, List<Problems.FieldIssue> errors) {
+    private ResponseEntity<Map<String, Object>> respond(
+            HttpServletRequest request,
+            int status,
+            String slug,
+            String code,
+            Map<String, ?> args,
+            List<Problems.FieldIssue> errors) {
         String lang = Language.of(request.getHeader("Accept-Language"));
         return ResponseEntity.status(HttpStatus.valueOf(status))
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)

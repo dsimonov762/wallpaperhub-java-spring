@@ -11,7 +11,8 @@ import java.time.Duration;
 public final class JwksReadiness implements ReadinessCheck {
 
     private final URI uri;
-    private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+    private final HttpClient client =
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
     private volatile boolean reached;
 
     public JwksReadiness(String jwksUri) {
@@ -29,8 +30,12 @@ public final class JwksReadiness implements ReadinessCheck {
             return true;
         }
         try {
-            HttpRequest request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(2)).GET().build();
-            reached = client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode() == 200;
+            HttpRequest request = HttpRequest.newBuilder(uri)
+                    .timeout(Duration.ofSeconds(2))
+                    .GET()
+                    .build();
+            reached =
+                    client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode() == 200;
         } catch (IOException e) {
             // not reachable yet
         } catch (InterruptedException e) {

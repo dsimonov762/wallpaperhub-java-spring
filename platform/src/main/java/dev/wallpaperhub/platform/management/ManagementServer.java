@@ -1,5 +1,7 @@
 package dev.wallpaperhub.platform.management;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -7,10 +9,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BooleanSupplier;
-
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
@@ -124,12 +122,13 @@ public final class ManagementServer implements SmartLifecycle, ApplicationListen
                 exchange.sendResponseHeaders(405, -1);
                 return;
             }
-            BooleanSupplier probe = switch (exchange.getRequestURI().getPath()) {
-                case "/health/live" -> () -> true;
-                case "/health/startup" -> () -> started;
-                case "/health/ready" -> this::ready;
-                default -> null;
-            };
+            BooleanSupplier probe =
+                    switch (exchange.getRequestURI().getPath()) {
+                        case "/health/live" -> () -> true;
+                        case "/health/startup" -> () -> started;
+                        case "/health/ready" -> this::ready;
+                        default -> null;
+                    };
             if (probe == null) {
                 exchange.sendResponseHeaders(404, -1);
                 return;
