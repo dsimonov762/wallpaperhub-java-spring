@@ -11,3 +11,4 @@ Append one line per finished piece of work, newest last.
 - 2026-11-27: WP-S1 increment 1 confirmed by the owner (`make fmt`, local tests, CI). Error Prone `StringSplitter` warning in `UserSort` fixed (no `String.split(String)`).
 - 2026-11-28: WP-S1: integration test of the account write paths on a real PostgreSQL (Testcontainers, the contract schema, `ddl-auto=validate`). Written without running it (see STATUS).
 - 2026-11-28: integration test on PostgreSQL confirmed by the owner. WP-S1 increment 2a: Redis cache-aside for profiles (`cache:user:{id}`, jittered TTL, single-flight, evict after commit, Redis optional with a back-off, readiness "reached once"). Written without running it (see STATUS).
+- 2026-11-28: `make up-chaos` of this repository (real account and gateway behind Toxiproxy, mocks for the other services): the template's target needs all four services. Found by the owner running `make chaos-run S=redis-down`. Written without running it.

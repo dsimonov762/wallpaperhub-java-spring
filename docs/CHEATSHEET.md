@@ -35,6 +35,17 @@ make down
 After a code change: `make run SVC=account` again (it rebuilds). Logs: `docker logs -f wallpaperhub-account-1`.
 Telemetry: Grafana at <http://localhost:3000> (Explore: Tempo, Loki, Prometheus); the checks T1-T3 look for the request of the conformance run in all three.
 
+## Failure injection (chaos)
+
+```
+make up-obs && make seed                   # infrastructure and the development users, if not running yet
+make up-chaos                              # the real account and the gateway behind Toxiproxy, Prism mocks for media, catalog, notification
+make chaos-run S=redis-down                # also: postgres-down, keycloak-down, ... (make chaos-list; the scenarios of media, catalog and notification need their services)
+make run SVC=account                       # account with direct connections again
+```
+
+This repository has its own `up-chaos`: the template's starts all four services and cannot build the three that are not here. See `docs/CHAOS.md` of the template for the scenarios.
+
 ## Run a service in the IDE (host mode)
 
 1. `make up-obs` (or `make up`), then `make host SVC=account`: the template stops the container of the service and prints how to start it yourself (`scripts/host-info.sh`; the environment is `infra/host/account.env` of the template, which already points `OTEL_EXPORTER_OTLP_ENDPOINT` at `localhost:4317`).

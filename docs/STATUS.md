@@ -37,7 +37,7 @@ Branch `wp/s1-account-redis`. **Verification: nothing was compiled or run** (no 
 - **Redis is optional:** any Redis failure is logged once and the request is served from PostgreSQL; Redis is then left alone for 5 s, so a dead Redis costs one slow command (200 ms) per 5 s and not one per request. `/health/ready` needs Redis to have been reachable **at least once** (SERVICE-SPEC section 2, like the JWKS), so a Redis outage does not take the service out of rotation (chaos `redis-down`: reads keep working).
 - **Tests:** `UserCacheTest` (fake store: hit and miss, TTL jitter, unreadable entry, outage window, pending evictions, single-flight with 8 readers), `UserCacheRedisTest` (real Redis: key, TTL, hit without database, eviction on update and delete, no negative caching), `UserCacheRedisDownTest` (nothing listens on the port: reads and writes still work), `UserServiceTest` (eviction rules).
 - **Known limits:** a reader that loaded the old row just before a commit can store it just after the eviction; it lives until its TTL (at most 6 minutes). The metric `cache_hit_ratio` (README section 11) comes with the metrics increment. Deletion by another instance needs no Kafka consumer: all instances share one Redis and the eviction is done by the instance that commits.
-- **Not run:** chaos `redis-down` and the load test.
+- **Chaos:** `make up-chaos` of this repository (the template's one tries to build all four services) starts the real account and the gateway behind Toxiproxy and Prism mocks for the other three; then `make chaos-run S=redis-down`. Written without running it. Its probes also read `/wallpapers/{id}` and `/notifications`, which the mocks answer. The load test is not run.
 
 ## What exists
 
