@@ -10,6 +10,7 @@ The commands of every day. `make help` lists the same with one line each; target
 | unit tests only | `make test` |
 | jars without tests | `make package` |
 | one module, with what it needs | `./mvnw -pl account -am verify` |
+| (the database test `UserPersistenceTest` starts PostgreSQL with Docker; without Docker it is skipped) | |
 | one test class | `./mvnw -pl platform -Dtest=PlatformRequestFilterTest test` |
 | format the code | `make fmt` (Spotless, palantir-java-format); `make build` fails on unformatted code |
 | build without the formatting check | `./mvnw verify -Dspotless.check.skip=true` (only to look at a test while you work; CI checks it) |

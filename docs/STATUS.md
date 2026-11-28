@@ -8,7 +8,7 @@ The repository has the build, the `platform` module and an `account` module. The
 
 ## WP-S1, increment 1 (account core): confirmed
 
-Merged in pull request #6. **Confirmed** by the owner after `make fmt`: the local tests and CI pass (CI runs `make seed` and the conformance suite). `./mvnw verify` reported one Error Prone warning (`StringSplitter` in `UserSort`), fixed afterwards. Not yet exercised against a real database by anything but CI's conformance run: the update, delete, outbox and audit paths (no integration test yet; `e2e/system/10-account.hurl` has not been run against it).
+Merged in pull request #6. **Confirmed** by the owner after `make fmt`: the local tests and CI pass (CI runs `make seed` and the conformance suite). `./mvnw verify` reported one Error Prone warning (`StringSplitter` in `UserSort`), fixed afterwards. `e2e/system/10-account.hurl` has not been run against it. The write paths have an integration test on a real PostgreSQL (next section), written but not yet run.
 
 What it contains: `users` on JPA (`ddl-auto=validate`, the schema of `contracts/db-schema`), `GET /users/me`, `PATCH /users/me` (ETag and `If-Match`, optimistic lock), `GET /users/{id}`, `GET /users` (admin; `q`, `status`, `sort`), soft `DELETE /users/{id}` (owner or admin). Each change writes its `audit_log` row and, for a new display name and for a deletion, its `outbox_event` row in the same transaction (plain SQL through `JdbcClient`; the payload field names are tested against `contracts/avro`). `/health/ready` also checks PostgreSQL. `POST /registrations` stays a 501 stand-in. CI runs `make seed` before the conformance suite.
 
@@ -21,7 +21,12 @@ Known gaps, on purpose, for later increments:
 - Unknown JSON properties in a request body are ignored, not rejected (the contract says `additionalProperties: false`).
 - A non-numeric `page` or `size` gives the generic 400, not a field-specific one.
 - The nullable `avatarUrl` is written as plain JSON in the payload; whether the relay needs the Avro JSON union form is decided there.
-- Still unproven by a test: `JdbcClient` with a `null` jsonb parameter (audit rows of a deletion), the outbox insert, and the `PATCH` and `DELETE` paths on a real database; the conformance suite only reads.
+
+## Integration test on PostgreSQL: written, not run
+
+Branch `wp/s1-account-it`. [`UserPersistenceTest`](../account/src/test/java/dev/wallpaperhub/account/user/UserPersistenceTest.java) starts the image of the template's Compose file (`postgres:18.7-trixie`) with Testcontainers, loads `contracts/db-schema/postgres/account/V1__init.sql` into it, and runs `UserService` with `ddl-auto=validate`. It proves: the entity matches the contract schema; update changes the row, the audit row and the outbox row together (and a stale `If-Match` changes nothing); a failing outbox insert rolls the profile change back (fault injected with a trigger that exists only in the test database); delete is soft, the audit row has null `before`/`after`, the event holds no personal data; list hides deleted users, filters, pages, and treats `%` and `_` in `q` literally; `OutboxWriter` refuses to run outside a transaction. **Verification: nothing was compiled or run** (the sandbox has no Docker or Maven Central). Unverified on purpose-built guesses: the Testcontainers 2 class names (`org.testcontainers.postgresql.PostgreSQLContainer`, artifact `testcontainers-postgresql`, version managed by Spring Boot), and a `@SpringBootTest` without web layer that finds the entities in the package of its test configuration.
+
+Needs Docker: without it the test skips itself (`./mvnw test` on a machine without Docker stays green); on CI (`CI` is set) `DockerInCiTest` fails instead of letting the tests vanish silently.
 
 ## What exists
 
