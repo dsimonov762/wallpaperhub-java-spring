@@ -110,11 +110,11 @@ class UserCacheTest {
         UserCache low = new UserCache(store, JsonMapper.builder().build(), clock::get, () -> 0.0);
         UserCache high = new UserCache(store, JsonMapper.builder().build(), clock::get, () -> 1.0);
 
-        assertThat(low.jitteredTtl()).isEqualTo(Duration.ofSeconds(240));
-        assertThat(high.jitteredTtl()).isEqualTo(Duration.ofSeconds(360));
-        assertThat(cache.jitteredTtl()).isEqualTo(Duration.ofSeconds(300));
+        assertThat(low.jitteredTtl()).isEqualTo(Duration.ofMinutes(4));
+        assertThat(high.jitteredTtl()).isEqualTo(Duration.ofMinutes(6));
+        assertThat(cache.jitteredTtl()).isEqualTo(Duration.ofMinutes(5));
         cache.get(ALICE, this::load);
-        assertThat(store.lastTtl).isEqualTo(Duration.ofSeconds(300));
+        assertThat(store.lastTtl).isEqualTo(Duration.ofMinutes(5));
     }
 
     @Test
