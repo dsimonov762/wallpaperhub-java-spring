@@ -64,7 +64,8 @@ class UserCacheRedisDownTest {
     @BeforeEach
     void seed() {
         clean();
-        jdbc.sql("insert into users (id, username, email, display_name) values (:id, 'alice', 'alice@example.com', 'Alice')")
+        jdbc.sql(
+                        "insert into users (id, username, email, display_name) values (:id, 'alice', 'alice@example.com', 'Alice')")
                 .param("id", ALICE)
                 .update();
     }

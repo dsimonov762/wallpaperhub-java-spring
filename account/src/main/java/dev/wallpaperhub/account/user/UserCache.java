@@ -154,7 +154,10 @@ class UserCache {
         try {
             return mapper.readValue(json, UserView.class);
         } catch (RuntimeException e) {
-            LOG.warn("cache entry of user {} is unreadable and is dropped: {}", id, e.getClass().getSimpleName());
+            LOG.warn(
+                    "cache entry of user {} is unreadable and is dropped: {}",
+                    id,
+                    e.getClass().getSimpleName());
             evict(id);
             return null;
         }
@@ -191,6 +194,10 @@ class UserCache {
         skipUntil = nanoTime.getAsLong() + RETRY_AFTER_FAILURE.toNanos();
         skipping = true;
         // one line per outage, not per request: the cache is not used again for a few seconds
-        LOG.warn("Redis {} failed, serving from the database for {} s: {}", what, RETRY_AFTER_FAILURE.toSeconds(), e.getClass().getSimpleName());
+        LOG.warn(
+                "Redis {} failed, serving from the database for {} s: {}",
+                what,
+                RETRY_AFTER_FAILURE.toSeconds(),
+                e.getClass().getSimpleName());
     }
 }

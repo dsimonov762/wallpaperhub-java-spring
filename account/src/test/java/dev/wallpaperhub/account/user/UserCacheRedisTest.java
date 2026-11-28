@@ -81,7 +81,8 @@ class UserCacheRedisTest {
     @BeforeEach
     void seed() {
         clean();
-        jdbc.sql("insert into users (id, username, email, display_name) values (:id, 'alice', 'alice@example.com', 'Alice')")
+        jdbc.sql(
+                        "insert into users (id, username, email, display_name) values (:id, 'alice', 'alice@example.com', 'Alice')")
                 .param("id", ALICE)
                 .update();
     }
@@ -98,7 +99,9 @@ class UserCacheRedisTest {
         UserView view = service.view(ALICE);
 
         assertThat(view.user().displayName()).isEqualTo("Alice");
-        assertThat(redis.opsForValue().get(KEY)).contains("\"username\":\"alice\"").contains("\"version\":0");
+        assertThat(redis.opsForValue().get(KEY))
+                .contains("\"username\":\"alice\"")
+                .contains("\"version\":0");
         Long ttl = redis.getExpire(KEY, TimeUnit.SECONDS);
         assertThat(ttl).isBetween(238L, 361L);
     }
@@ -133,7 +136,8 @@ class UserCacheRedisTest {
 
         assertThat(redis.hasKey(KEY)).isFalse();
         assertThatThrownBy(() -> service.view(ALICE))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(404));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(404));
         assertThat(redis.hasKey(KEY)).isFalse(); // a missing user is not cached
     }
 }

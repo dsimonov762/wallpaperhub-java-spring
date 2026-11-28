@@ -67,7 +67,8 @@ class UserServiceTest {
 
     @Test
     void viewLoadsThroughTheCacheAndKeepsTheVersionForTheEtag() {
-        when(cache.get(eq(ALICE), any())).thenAnswer(call -> call.<Supplier<UserView>>getArgument(1).get());
+        when(cache.get(eq(ALICE), any()))
+                .thenAnswer(call -> call.<Supplier<UserView>>getArgument(1).get());
 
         UserView view = service.view(ALICE);
 
@@ -78,10 +79,12 @@ class UserServiceTest {
 
     @Test
     void viewOfAnUnknownUserIsNotFound() {
-        when(cache.get(eq(BOB), any())).thenAnswer(call -> call.<Supplier<UserView>>getArgument(1).get());
+        when(cache.get(eq(BOB), any()))
+                .thenAnswer(call -> call.<Supplier<UserView>>getArgument(1).get());
 
         assertThatThrownBy(() -> service.view(BOB))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(404));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(404));
     }
 
     @Test
@@ -96,7 +99,8 @@ class UserServiceTest {
     @Test
     void aFailedOrEmptyChangeEvictsNothing() {
         service.updateProfile(ALICE, request("Alice", null), null);
-        assertThatThrownBy(() -> service.updateProfile(ALICE, request("Other", null), 9L)).isInstanceOf(AppException.class);
+        assertThatThrownBy(() -> service.updateProfile(ALICE, request("Other", null), 9L))
+                .isInstanceOf(AppException.class);
 
         verifyNoInteractions(cache);
     }
