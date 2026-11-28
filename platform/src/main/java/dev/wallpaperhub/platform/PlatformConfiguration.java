@@ -53,7 +53,8 @@ class PlatformConfiguration {
     }
 
     @Bean
-    ProblemExceptionHandler problemExceptionHandler(Problems problems, ObjectProvider<ExceptionClassifier> classifiers) {
+    ProblemExceptionHandler problemExceptionHandler(
+            Problems problems, ObjectProvider<ExceptionClassifier> classifiers) {
         return new ProblemExceptionHandler(problems, classifiers.orderedStream().toList());
     }
 

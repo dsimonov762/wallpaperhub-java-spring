@@ -12,7 +12,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 class ProblemExceptionHandlerTest {
 
-    private final Problems problems = new Problems(Messages.load(JsonMapper.builder().build()));
+    private final Problems problems =
+            new Problems(Messages.load(JsonMapper.builder().build()));
     private final MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/users/me");
 
     /** A service that knows that its database errors are not bugs. */

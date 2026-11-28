@@ -55,13 +55,16 @@ class GrpcErrorsTest {
     void aLostOrRefusedConnectionOfTheDriverIsUnavailable() {
         // pgjdbc: SQLSTATE 08xxx for "connection attempt failed" and "I/O error while sending to the backend"
         SQLException refused = new SQLException("connection attempt failed", "08001");
-        SQLException reset = new SQLException("An I/O error occurred", "08006", new SocketException("Connection reset"));
+        SQLException reset =
+                new SQLException("An I/O error occurred", "08006", new SocketException("Connection reset"));
 
-        assertThat(DatabaseFailures.isUnavailable(new RuntimeException("wrapped", refused))).isTrue();
+        assertThat(DatabaseFailures.isUnavailable(new RuntimeException("wrapped", refused)))
+                .isTrue();
         assertThat(DatabaseFailures.isUnavailable(new RuntimeException(reset))).isTrue();
         assertThat(DatabaseFailures.isUnavailable(new SQLException("unique violation", "23505")))
                 .isFalse();
-        assertThat(DatabaseFailures.isUnavailable(new IllegalArgumentException("a bug"))).isFalse();
+        assertThat(DatabaseFailures.isUnavailable(new IllegalArgumentException("a bug")))
+                .isFalse();
     }
 
     @Test

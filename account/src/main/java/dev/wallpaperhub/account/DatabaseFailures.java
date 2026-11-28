@@ -42,6 +42,8 @@ public final class DatabaseFailures {
 
     /** SQLSTATE class 08 is "connection exception": the driver could not connect, or lost the connection (reset, broken pipe, timeout). */
     private static boolean isConnectionError(Throwable t) {
-        return t instanceof SQLException sql && sql.getSQLState() != null && sql.getSQLState().startsWith("08");
+        return t instanceof SQLException sql
+                && sql.getSQLState() != null
+                && sql.getSQLState().startsWith("08");
     }
 }
