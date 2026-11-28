@@ -81,10 +81,10 @@ class AccountGrpcServiceTest {
     @BeforeEach
     void start() throws Exception {
         clean();
-        insert(U1, "u1", T1, false);
+        insert(U1, "u1a", T1, false);
         insert(U2A, "u2a", T2, false);
         insert(U2B, "u2b", T2, false); // the same timestamp as u2a: the order falls back to the id
-        insert(U3, "u3", T3, false);
+        insert(U3, "u3a", T3, false);
         insert(DELETED, "gone", T2, true);
 
         String name = UUID.randomUUID().toString();
@@ -143,9 +143,9 @@ class AccountGrpcServiceTest {
                 stub.getUser(GetUserRequest.newBuilder().setId(U1.toString()).build());
 
         assertThat(user.getId()).isEqualTo(U1.toString());
-        assertThat(user.getUsername()).isEqualTo("u1");
-        assertThat(user.getDisplayName()).isEqualTo("Name of u1");
-        assertThat(user.getEmail()).isEqualTo("u1@example.com");
+        assertThat(user.getUsername()).isEqualTo("u1a");
+        assertThat(user.getDisplayName()).isEqualTo("Name of u1a");
+        assertThat(user.getEmail()).isEqualTo("u1a@example.com");
         assertThat(user.getLocale()).isEqualTo("de");
         assertThat(user.getAvatarUrl()).isEmpty();
     }
@@ -175,7 +175,7 @@ class AccountGrpcServiceTest {
                 .addIds(U1.toString())
                 .build());
 
-        assertThat(response.getUsersList()).extracting(User::getUsername).containsExactlyInAnyOrder("u1", "u3");
+        assertThat(response.getUsersList()).extracting(User::getUsername).containsExactlyInAnyOrder("u1a", "u3a");
     }
 
     @Test
@@ -203,9 +203,9 @@ class AccountGrpcServiceTest {
 
         assertThat(usernames(stub.listUsersUpdatedSince(
                         UpdatedSinceRequest.newBuilder().setSince(since).build())))
-                .containsExactly("u2a", "u2b", "u3");
+                .containsExactly("u2a", "u2b", "u3a");
         assertThat(usernames(stub.listUsersUpdatedSince(UpdatedSinceRequest.getDefaultInstance())))
-                .containsExactly("u1", "u2a", "u2b", "u3");
+                .containsExactly("u1a", "u2a", "u2b", "u3a");
     }
 
     @Test
@@ -214,7 +214,7 @@ class AccountGrpcServiceTest {
 
         service.updatedSince(Instant.EPOCH, 2, user -> seen.add(user.getUsername()));
 
-        assertThat(seen).containsExactly("u1", "u2a", "u2b", "u3");
+        assertThat(seen).containsExactly("u1a", "u2a", "u2b", "u3a");
     }
 
     @Test
@@ -226,7 +226,7 @@ class AccountGrpcServiceTest {
             return seen.size() < 3;
         });
 
-        assertThat(seen).containsExactly("u1", "u2a", "u2b");
+        assertThat(seen).containsExactly("u1a", "u2a", "u2b");
     }
 
     @Test

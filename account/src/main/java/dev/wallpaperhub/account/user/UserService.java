@@ -4,7 +4,6 @@ import dev.wallpaperhub.account.audit.AuditWriter;
 import dev.wallpaperhub.account.outbox.OutboxWriter;
 import dev.wallpaperhub.account.outbox.UserEvents;
 import dev.wallpaperhub.platform.problem.AppException;
-import jakarta.persistence.criteria.Predicate;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -70,14 +69,10 @@ class UserService {
         }
         if (q != null && !q.isBlank()) {
             String pattern = "%" + escapeLike(q.strip().toLowerCase(Locale.ROOT)) + "%";
-            filters.add((root, query, cb) -> {
-                Predicate[] any = {
+            filters.add((root, query, cb) -> cb.or(
                     cb.like(cb.lower(root.get("username")), pattern, '\\'),
                     cb.like(cb.lower(root.get("displayName")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("email")), pattern, '\\')
-                };
-                return cb.or(any);
-            });
+                    cb.like(cb.lower(root.get("email")), pattern, '\\')));
         }
         return users.findAll(Specification.allOf(filters), PageRequest.of(page, size, sort));
     }
