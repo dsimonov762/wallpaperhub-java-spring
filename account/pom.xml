@@ -28,6 +28,16 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
+    <!-- the gRPC server of contracts/proto (port 9090): Spring Boot 4.2 manages the starter and the versions of grpc-java and protobuf-java -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-grpc-server</artifactId>
+    </dependency>
+    <!-- server reflection, so that `grpcurl -plaintext localhost:9090 list` works; Spring Boot registers it when this is on the classpath -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-services</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
@@ -37,6 +47,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- an in-process gRPC server and client for the tests: no network port -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-inprocess</artifactId>
       <scope>test</scope>
     </dependency>
     <!-- a real PostgreSQL for UserPersistenceTest; the version is managed by Spring Boot (testcontainers.version) -->
@@ -50,6 +66,17 @@
   <build>
     <finalName>account</finalName>
     <plugins>
+      <plugin>
+        <!-- Generates the Java classes and the gRPC stubs of the contract. Spring Boot's parent configures the plugin (protoc and grpc-java versions,
+             the generate goal); the only change is the source: contracts/proto is the vendored contract, and a copy under src/ would drift from it. -->
+        <groupId>io.github.ascopes</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+        <configuration>
+          <sourceDirectories combine.self="override">
+            <sourceDirectory>${project.basedir}/../contracts/proto</sourceDirectory>
+          </sourceDirectories>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -65,11 +92,13 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Mockito as an agent from the start: without it, Mockito attaches itself at runtime, which newer JDKs will forbid -->
+      <!-- Mockito as an agent from the start: without it, Mockito attaches itself at runtime, which newer JDKs will forbid.
+           The native-access option: Netty loads native libraries, which JDK 24+ warns about (and will one day block) without it.
+           Xshare:off: Mockito appends to the bootstrap class path, and the JVM then warns about class data sharing (as in docker/entrypoint.sh). -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+          <argLine>-javaagent:${org.mockito:mockito-core:jar} --enable-native-access=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
     </plugins>

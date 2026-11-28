@@ -4,6 +4,7 @@ import dev.wallpaperhub.platform.i18n.Messages;
 import dev.wallpaperhub.platform.management.JwksReadiness;
 import dev.wallpaperhub.platform.management.ManagementServer;
 import dev.wallpaperhub.platform.management.ReadinessCheck;
+import dev.wallpaperhub.platform.problem.ExceptionClassifier;
 import dev.wallpaperhub.platform.problem.ProblemExceptionHandler;
 import dev.wallpaperhub.platform.problem.ProblemWriter;
 import dev.wallpaperhub.platform.problem.Problems;
@@ -52,8 +53,9 @@ class PlatformConfiguration {
     }
 
     @Bean
-    ProblemExceptionHandler problemExceptionHandler(Problems problems) {
-        return new ProblemExceptionHandler(problems);
+    ProblemExceptionHandler problemExceptionHandler(
+            Problems problems, ObjectProvider<ExceptionClassifier> classifiers) {
+        return new ProblemExceptionHandler(problems, classifiers.orderedStream().toList());
     }
 
     /** A {@code Filter} bean is registered by Spring Boot with the order it declares. */

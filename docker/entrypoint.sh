@@ -14,5 +14,6 @@ agent_opts=""
 if [ "${OTEL_SDK_DISABLED:-false}" != true ] && [ -f "$agent" ]; then
   agent_opts="-javaagent:$agent -Dotel.javaagent.logging=application --sun-misc-unsafe-memory-access=allow -Xshare:off"
 fi
+# Netty loads native libraries; JDK 24+ warns about that on stderr, again a non-JSON line (L1), unless native access is granted.
 # shellcheck disable=SC2086   # $opts and $agent_opts are lists of options on purpose
-exec java $opts $agent_opts -XX:+ExitOnOutOfMemoryError -jar /app/app.jar "$@"
+exec java $opts $agent_opts --enable-native-access=ALL-UNNAMED -XX:+ExitOnOutOfMemoryError -jar /app/app.jar "$@"

@@ -4,17 +4,18 @@ import dev.wallpaperhub.account.audit.AuditWriter;
 import dev.wallpaperhub.account.outbox.OutboxWriter;
 import dev.wallpaperhub.account.outbox.UserEvents;
 import dev.wallpaperhub.platform.problem.AppException;
-import jakarta.persistence.criteria.Predicate;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -68,16 +69,40 @@ class UserService {
         }
         if (q != null && !q.isBlank()) {
             String pattern = "%" + escapeLike(q.strip().toLowerCase(Locale.ROOT)) + "%";
-            filters.add((root, query, cb) -> {
-                Predicate[] any = {
+            filters.add((root, query, cb) -> cb.or(
                     cb.like(cb.lower(root.get("username")), pattern, '\\'),
                     cb.like(cb.lower(root.get("displayName")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("email")), pattern, '\\')
-                };
-                return cb.or(any);
-            });
+                    cb.like(cb.lower(root.get("email")), pattern, '\\')));
         }
         return users.findAll(Specification.allOf(filters), PageRequest.of(page, size, sort));
+    }
+
+    /** The live users among {@code ids}; unknown and deleted ids are left out. */
+    @Transactional(readOnly = true)
+    List<UserEntity> byIds(Collection<UUID> ids) {
+        return users.findAllById(ids).stream().filter(user -> !user.isDeleted()).toList();
+    }
+
+    /**
+     * Gives every live user with {@code updated_at >= since} to {@code sink}, oldest first, {@code chunkSize} rows per query (each
+     * chunk is its own short transaction, so no connection is held while a slow consumer is served). Stops when {@code sink}
+     * returns false. A user changed while the stream runs may be seen twice, never skipped.
+     */
+    void updatedSince(Instant since, int chunkSize, Predicate<UserEntity> sink) {
+        List<UserEntity> chunk = users.findByDeletedAtIsNullAndUpdatedAtGreaterThanEqualOrderByUpdatedAtAscIdAsc(
+                since, PageRequest.ofSize(chunkSize));
+        while (!chunk.isEmpty()) {
+            for (UserEntity user : chunk) {
+                if (!sink.test(user)) {
+                    return;
+                }
+            }
+            if (chunk.size() < chunkSize) {
+                return;
+            }
+            UserEntity last = chunk.get(chunk.size() - 1);
+            chunk = users.findAfter(last.getUpdatedAt(), last.getId(), PageRequest.ofSize(chunkSize));
+        }
     }
 
     @Transactional
