@@ -15,8 +15,9 @@ final class PostgresSupport {
     // the version of the template's docker-compose.yml
     private static final String IMAGE = "postgres:18.7-trixie";
     // surefire runs in the module directory; contracts/ is in the repository root
-    private static final Path SCHEMA =
-            Path.of("..", "contracts", "db-schema", "postgres", "account", "V1__init.sql").toAbsolutePath().normalize();
+    private static final Path SCHEMA = Path.of("..", "contracts", "db-schema", "postgres", "account", "V1__init.sql")
+            .toAbsolutePath()
+            .normalize();
 
     private static PostgreSQLContainer postgres;
 

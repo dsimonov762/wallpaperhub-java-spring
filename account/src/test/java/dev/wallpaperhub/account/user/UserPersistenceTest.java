@@ -22,8 +22,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -97,8 +97,7 @@ class UserPersistenceTest {
     }
 
     private void insert(UUID id, String username, String status, boolean deleted) {
-        jdbc.sql(
-                        """
+        jdbc.sql("""
                         insert into users (id, username, email, display_name, status, deleted_at)
                         values (:id, :username, :email, :displayName, :status, case when :deleted then now() end)
                         """)
@@ -123,7 +122,8 @@ class UserPersistenceTest {
 
     @Test
     void theEntityMatchesTheContractSchema() {
-        // the context only starts when Hibernate's validation of the schema passes; reading a row proves the column types
+        // the context only starts when Hibernate's validation of the schema passes; reading a row proves the column
+        // types
         UserEntity alice = users.findById(ALICE).orElseThrow();
         assertThat(alice.getUsername()).isEqualTo("alice");
         assertThat(alice.getVersion()).isZero();
@@ -141,14 +141,11 @@ class UserPersistenceTest {
                 .singleRow();
         assertThat(row).containsEntry("version", 1L).containsEntry("display_name", "Alice W.");
 
-        Map<String, Object> audit = jdbc.sql(
-                        """
+        Map<String, Object> audit = jdbc.sql("""
                         select action, cast(actor_id as text) as actor, entity_id,
                                before ->> 'displayName' as old_name, after ->> 'displayName' as new_name
                         from audit_log
-                        """)
-                .query()
-                .singleRow();
+                        """).query().singleRow();
         assertThat(audit)
                 .containsEntry("action", "PROFILE_UPDATED")
                 .containsEntry("actor", ALICE.toString())
@@ -156,16 +153,13 @@ class UserPersistenceTest {
                 .containsEntry("old_name", "Alice")
                 .containsEntry("new_name", "Alice W.");
 
-        Map<String, Object> event = jdbc.sql(
-                        """
+        Map<String, Object> event = jdbc.sql("""
                         select topic, event_type, aggregate_id, cast(event_id as text) as event_id,
                                payload ->> 'eventId' as payload_event_id, payload ->> 'displayName' as display_name,
                                payload ->> 'username' as username, headers ->> 'event-id' as header_event_id,
                                published_at is null as unpublished
                         from outbox_event
-                        """)
-                .query()
-                .singleRow();
+                        """).query().singleRow();
         assertThat(event)
                 .containsEntry("topic", "account.user.profile-updated.v1")
                 .containsEntry("event_type", "UserProfileUpdated")
@@ -180,7 +174,8 @@ class UserPersistenceTest {
     @Test
     void aStaleVersionChangesNothing() {
         assertThatThrownBy(() -> service.updateProfile(ALICE, displayName("Other"), 5L))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(409));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(409));
 
         assertThat(users.findById(ALICE).orElseThrow().getDisplayName()).isEqualTo("Alice");
         assertThat(count("audit_log")).isZero();
@@ -199,12 +194,10 @@ class UserPersistenceTest {
     @Test
     void ifTheOutboxInsertFailsTheProfileChangeIsRolledBack() {
         // fault injection, in the throw-away database of the test only: an insert into outbox_event fails
-        jdbc.sql(
-                        """
+        jdbc.sql("""
                         create or replace function fail_outbox() returns trigger language plpgsql
                         as $$ begin raise exception 'outbox is down'; end $$
-                        """)
-                .update();
+                        """).update();
         jdbc.sql("create trigger fail_outbox before insert on outbox_event for each row execute function fail_outbox()")
                 .update();
 
@@ -243,13 +236,15 @@ class UserPersistenceTest {
         assertThat((String) event.get("payload")).doesNotContain("alice").doesNotContain("example.com");
 
         assertThatThrownBy(() -> service.get(ALICE))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(404));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(404));
     }
 
     @Test
     void someoneElseCannotDeleteYouButAnAdminCan() {
         assertThatThrownBy(() -> service.delete(ALICE, BOB, false))
-                .isInstanceOfSatisfying(AppException.class, e -> assertThat(e.status()).isEqualTo(403));
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(403));
         assertThat(users.findById(ALICE).orElseThrow().isDeleted()).isFalse();
 
         service.delete(ALICE, BOB, true);
@@ -261,7 +256,9 @@ class UserPersistenceTest {
         Page<UserEntity> all = service.list(null, null, 0, 10, UserSort.parse("username,asc"));
         assertThat(all.map(UserEntity::getUsername).toList()).containsExactly("alice", "bob", "dave_x");
 
-        assertThat(service.list("BO", null, 0, 10, UserSort.parse(null)).map(UserEntity::getUsername).toList())
+        assertThat(service.list("BO", null, 0, 10, UserSort.parse(null))
+                        .map(UserEntity::getUsername)
+                        .toList())
                 .containsExactly("bob");
         assertThat(service.list("example.com", null, 0, 10, UserSort.parse("username,desc"))
                         .map(UserEntity::getUsername)
@@ -279,7 +276,8 @@ class UserPersistenceTest {
 
     @Test
     void likeWildcardsInTheSearchTextAreLiteral() {
-        assertThat(service.list("%", null, 0, 10, UserSort.parse(null)).getTotalElements()).isZero();
+        assertThat(service.list("%", null, 0, 10, UserSort.parse(null)).getTotalElements())
+                .isZero();
         assertThat(service.list("_", null, 0, 10, UserSort.parse(null))
                         .map(UserEntity::getUsername)
                         .toList())
