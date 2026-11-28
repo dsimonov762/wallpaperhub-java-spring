@@ -92,11 +92,13 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Mockito as an agent from the start: without it, Mockito attaches itself at runtime, which newer JDKs will forbid -->
+      <!-- Mockito as an agent from the start: without it, Mockito attaches itself at runtime, which newer JDKs will forbid.
+           The native-access option: Netty loads native libraries, which JDK 24+ warns about (and will one day block) without it.
+           Xshare:off: Mockito appends to the bootstrap class path, and the JVM then warns about class data sharing (as in docker/entrypoint.sh). -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+          <argLine>-javaagent:${org.mockito:mockito-core:jar} --enable-native-access=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
     </plugins>
