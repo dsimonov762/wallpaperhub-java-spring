@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,6 +48,7 @@ import org.springframework.test.context.DynamicPropertySource;
             "spring.data.redis.port=6379"
         })
 @EnabledIf("dev.wallpaperhub.account.user.PostgresSupport#dockerAvailable")
+@Timeout(30) // a stuck stream fails the test instead of hanging the build
 class AccountGrpcServiceTest {
 
     private static final Instant T1 = Instant.parse("2026-01-01T10:00:00Z");
@@ -88,8 +90,10 @@ class AccountGrpcServiceTest {
         insert(DELETED, "gone", T2, true);
 
         String name = UUID.randomUUID().toString();
+        // No directExecutor() on the server: listUsersUpdatedSince waits for the client's flow control (awaitReady),
+        // and on a
+        // direct executor that wait would run on the test thread, which is the one that has to read the next message.
         server = InProcessServerBuilder.forName(name)
-                .directExecutor()
                 .addService(new AccountGrpcService(service))
                 .build()
                 .start();
