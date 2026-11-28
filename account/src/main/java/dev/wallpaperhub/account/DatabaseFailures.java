@@ -1,7 +1,9 @@
 package dev.wallpaperhub.account;
 
 import java.net.ConnectException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collections;
@@ -11,7 +13,10 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.transaction.CannotCreateTransactionException;
 
-/** Tells "PostgreSQL cannot be reached or does not answer in time" from every other failure: the first is a 503 / UNAVAILABLE, the rest a 500 / INTERNAL. */
+/**
+ * Tells "PostgreSQL cannot be reached or does not answer in time" from every other failure: the first is a 503 / UNAVAILABLE, the rest
+ * a 500 / INTERNAL. Looks at the whole chain of causes: Spring, Hibernate and the driver each wrap what is below them.
+ */
 public final class DatabaseFailures {
 
     private DatabaseFailures() {}
@@ -26,10 +31,17 @@ public final class DatabaseFailures {
                     || t instanceof SQLTransientConnectionException
                     || t instanceof SQLNonTransientConnectionException
                     || t instanceof ConnectException
-                    || t instanceof SocketTimeoutException) {
+                    || t instanceof SocketException
+                    || t instanceof SocketTimeoutException
+                    || isConnectionError(t)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** SQLSTATE class 08 is "connection exception": the driver could not connect, or lost the connection (reset, broken pipe, timeout). */
+    private static boolean isConnectionError(Throwable t) {
+        return t instanceof SQLException sql && sql.getSQLState() != null && sql.getSQLState().startsWith("08");
     }
 }

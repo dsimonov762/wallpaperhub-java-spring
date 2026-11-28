@@ -60,6 +60,11 @@ public class AppException extends RuntimeException {
         return new AppException(503, "upstream-unavailable", code, Map.of());
     }
 
+    /** A dependency of this service does not answer (README 5.3, {@code upstream.unavailable}): {@code service} names it for the message. */
+    public static AppException dependencyDown(String service) {
+        return new AppException(503, "upstream-unavailable", "upstream.unavailable", Map.of("service", service));
+    }
+
     /** A stand-in until the real implementation exists (WP-S1). */
     public static AppException notImplemented() {
         return new AppException(501, "internal-error", null, Map.of());

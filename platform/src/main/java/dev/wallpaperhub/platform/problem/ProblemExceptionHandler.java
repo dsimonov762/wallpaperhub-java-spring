@@ -39,9 +39,15 @@ public class ProblemExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ProblemExceptionHandler.class);
 
     private final Problems problems;
+    private final List<ExceptionClassifier> classifiers;
 
     public ProblemExceptionHandler(Problems problems) {
+        this(problems, List.of());
+    }
+
+    public ProblemExceptionHandler(Problems problems, List<ExceptionClassifier> classifiers) {
         this.problems = problems;
+        this.classifiers = List.copyOf(classifiers);
     }
 
     @ExceptionHandler(AppException.class)
@@ -126,9 +132,25 @@ public class ProblemExceptionHandler {
         return respond(request, 403, "forbidden", null, Map.of(), List.of());
     }
 
-    /** E1: nothing else leaves the service as HTML or as a stack trace. The cause goes to the log, not to the caller. */
+    /**
+     * E1: nothing else leaves the service as HTML or as a stack trace. The cause goes to the log, not to the caller. A failure that a
+     * service recognises through an {@link ExceptionClassifier} (its database is down, say) is the answer of that exception, not a 500.
+     */
     @ExceptionHandler(Exception.class)
     ResponseEntity<Map<String, Object>> unexpected(Exception e, HttpServletRequest request) {
+        for (ExceptionClassifier classifier : classifiers) {
+            AppException known = classifier.classify(e);
+            if (known != null) {
+                LOG.warn(
+                        "{} {} answered {} ({}): {}",
+                        request.getMethod(),
+                        request.getRequestURI(),
+                        known.status(),
+                        known.slug(),
+                        e.getClass().getSimpleName());
+                return respond(request, known.status(), known.slug(), known.code(), known.args(), List.of());
+            }
+        }
         LOG.error("unhandled exception for {} {}", request.getMethod(), request.getRequestURI(), e);
         return respond(request, 500, "internal-error", null, Map.of(), List.of());
     }
