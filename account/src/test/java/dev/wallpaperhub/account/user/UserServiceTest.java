@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,7 @@ class UserServiceTest {
     private UserRepository users;
     private OutboxWriter outbox;
     private AuditWriter audit;
+    private UserCache cache;
     private UserService service;
     private UserEntity alice;
 
@@ -41,7 +43,8 @@ class UserServiceTest {
         users = mock(UserRepository.class);
         outbox = mock(OutboxWriter.class);
         audit = mock(AuditWriter.class);
-        service = new UserService(users, outbox, audit, Clock.fixed(NOW, ZoneOffset.UTC));
+        cache = mock(UserCache.class);
+        service = new UserService(users, outbox, audit, Clock.fixed(NOW, ZoneOffset.UTC), cache);
         alice = UserEntity.create(ALICE, "alice", "Alice@Example.com", "Alice", "en", Instant.EPOCH);
         when(users.findById(ALICE)).thenReturn(Optional.of(alice));
     }
@@ -60,6 +63,46 @@ class UserServiceTest {
                         AppException.class, e -> assertThat(e.status()).isEqualTo(404));
         alice.markDeleted(Instant.EPOCH);
         assertThatThrownBy(() -> service.get(ALICE)).isInstanceOf(AppException.class);
+    }
+
+    @Test
+    void viewLoadsThroughTheCacheAndKeepsTheVersionForTheEtag() {
+        when(cache.get(eq(ALICE), any()))
+                .thenAnswer(call -> call.<Supplier<UserView>>getArgument(1).get());
+
+        UserView view = service.view(ALICE);
+
+        assertThat(view.version()).isZero();
+        assertThat(view.user().username()).isEqualTo("alice");
+        assertThat(view.user().email()).isEqualTo("alice@example.com");
+    }
+
+    @Test
+    void viewOfAnUnknownUserIsNotFound() {
+        when(cache.get(eq(BOB), any()))
+                .thenAnswer(call -> call.<Supplier<UserView>>getArgument(1).get());
+
+        assertThatThrownBy(() -> service.view(BOB))
+                .isInstanceOfSatisfying(
+                        AppException.class, e -> assertThat(e.status()).isEqualTo(404));
+    }
+
+    @Test
+    void everyChangeEvictsTheCachedProfile() {
+        service.updateProfile(ALICE, request("Alice W.", null), null);
+        verify(cache).evict(ALICE);
+
+        service.delete(ALICE, ALICE, false);
+        verify(cache, org.mockito.Mockito.times(2)).evict(ALICE);
+    }
+
+    @Test
+    void aFailedOrEmptyChangeEvictsNothing() {
+        service.updateProfile(ALICE, request("Alice", null), null);
+        assertThatThrownBy(() -> service.updateProfile(ALICE, request("Other", null), 9L))
+                .isInstanceOf(AppException.class);
+
+        verifyNoInteractions(cache);
     }
 
     @Test

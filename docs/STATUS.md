@@ -22,11 +22,22 @@ Known gaps, on purpose, for later increments:
 - A non-numeric `page` or `size` gives the generic 400, not a field-specific one.
 - The nullable `avatarUrl` is written as plain JSON in the payload; whether the relay needs the Avro JSON union form is decided there.
 
-## Integration test on PostgreSQL: written, not run
+## Integration test on PostgreSQL: confirmed
 
-Branch `wp/s1-account-it`. [`UserPersistenceTest`](../account/src/test/java/dev/wallpaperhub/account/user/UserPersistenceTest.java) starts the image of the template's Compose file (`postgres:18.7-trixie`) with Testcontainers, loads `contracts/db-schema/postgres/account/V1__init.sql` into it, and runs `UserService` with `ddl-auto=validate`. It proves: the entity matches the contract schema; update changes the row, the audit row and the outbox row together (and a stale `If-Match` changes nothing); a failing outbox insert rolls the profile change back (fault injected with a trigger that exists only in the test database); delete is soft, the audit row has null `before`/`after`, the event holds no personal data; list hides deleted users, filters, pages, and treats `%` and `_` in `q` literally; `OutboxWriter` refuses to run outside a transaction. **Verification: nothing was compiled or run** (the sandbox has no Docker or Maven Central). Unverified on purpose-built guesses: the Testcontainers 2 class names (`org.testcontainers.postgresql.PostgreSQLContainer`, artifact `testcontainers-postgresql`, version managed by Spring Boot), and a `@SpringBootTest` without web layer that finds the entities in the package of its test configuration.
+Merged in pull request #8; **Confirmed** by the owner (local run with Docker and CI). [`UserPersistenceTest`](../account/src/test/java/dev/wallpaperhub/account/user/UserPersistenceTest.java) starts the image of the template's Compose file (`postgres:18.7-trixie`) with Testcontainers, loads `contracts/db-schema/postgres/account/V1__init.sql` into it, and runs `UserService` with `ddl-auto=validate`: the entity matches the contract schema; update, audit row and outbox row are written together; a failing outbox insert rolls the profile change back; delete is soft; list filters, pages and escapes `%` and `_`; `OutboxWriter` refuses to run outside a transaction.
 
-Needs Docker: without it the test skips itself (`./mvnw test` on a machine without Docker stays green); on CI (`CI` is set) `DockerInCiTest` fails instead of letting the tests vanish silently.
+Needs Docker: without it the tests skip themselves (`./mvnw test` on a machine without Docker stays green); on CI (`CI` is set) `DockerInCiTest` fails instead of letting them vanish silently.
+
+## WP-S1, increment 2a (Redis cache-aside): written, not run
+
+Branch `wp/s1-account-redis`. **Verification: nothing was compiled or run** (no Docker, no Maven Central in the sandbox; only a `javac` syntax check). Expect compile errors first; the new dependency is `spring-boot-starter-data-redis`.
+
+- **Contract:** `cache:user:{id}`, JSON, 5 min TTL with plus or minus 20 % jitter, single-flight, invalidation on every write (`contracts/db-schema/redis/keys.yaml`, README 6.5). The cached value is `{"version": n, "user": {User schema}}`: the schema has no `version`, the `ETag` needs it. `GET /users/me` and `GET /users/{id}` both read through it (the public view is derived from the same entry).
+- **Eviction after commit:** a transaction synchronization removes the key once the change is committed. An eviction that cannot reach Redis is remembered (up to 10 000 ids) and retried before the next read when Redis answers again.
+- **Redis is optional:** any Redis failure is logged once and the request is served from PostgreSQL; Redis is then left alone for 5 s, so a dead Redis costs one slow command (200 ms) per 5 s and not one per request. `/health/ready` needs Redis to have been reachable **at least once** (SERVICE-SPEC section 2, like the JWKS), so a Redis outage does not take the service out of rotation (chaos `redis-down`: reads keep working).
+- **Tests:** `UserCacheTest` (fake store: hit and miss, TTL jitter, unreadable entry, outage window, pending evictions, single-flight with 8 readers), `UserCacheRedisTest` (real Redis: key, TTL, hit without database, eviction on update and delete, no negative caching), `UserCacheRedisDownTest` (nothing listens on the port: reads and writes still work), `UserServiceTest` (eviction rules).
+- **Known limits:** a reader that loaded the old row just before a commit can store it just after the eviction; it lives until its TTL (at most 6 minutes). The metric `cache_hit_ratio` (README section 11) comes with the metrics increment. Deletion by another instance needs no Kafka consumer: all instances share one Redis and the eviction is done by the instance that commits.
+- **Chaos:** `make up-chaos` of this repository (the template's one tries to build all four services) starts the real account and the gateway behind Toxiproxy and Prism mocks for the other three; then `make chaos-run S=redis-down`. Written without running it. Its probes also read `/wallpapers/{id}` and `/notifications`, which the mocks answer. The load test is not run.
 
 ## What exists
 
@@ -63,6 +74,5 @@ The first increment (build, `platform`, `account` scaffold, conformance without 
 
 ## Next
 
-1. Run increment 1: `make fmt`, `./mvnw verify`, then `make down && make up-obs && make seed && make run SVC=account && make conformance SVC=account ARGS="--lifecycle"`; send the output of whatever fails.
-2. Increment 2 part 2 (this change): run `make fmt`, commit the formatting diff, fix what Error Prone reports in `./mvnw verify`; then WP-S1.
-3. WP-S1, next increments: Redis cache-aside and the gRPC server; the outbox relay with the Avro producer; the Keycloak admin client and registration; avatar and banner with media verification; token endpoints, purge job and metrics.
+1. Run increment 2a: `make fmt`, `./mvnw verify` (Docker running), then `make down && make up-obs && make seed && make run SVC=account && make conformance SVC=account ARGS="--lifecycle"`; then `make chaos-run S=redis-down` and `S=postgres-down` against it. Send the output of whatever fails.
+2. WP-S1, next increments: the gRPC server; the outbox relay with the Avro producer; the Keycloak admin client and registration; avatar and banner with media verification; token endpoints, purge job and metrics.

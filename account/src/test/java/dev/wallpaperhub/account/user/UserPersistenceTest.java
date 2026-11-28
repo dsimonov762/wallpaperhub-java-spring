@@ -4,14 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.wallpaperhub.account.audit.AuditWriter;
+import dev.wallpaperhub.account.cache.CacheStore;
 import dev.wallpaperhub.account.outbox.OutboxMessage;
 import dev.wallpaperhub.account.outbox.OutboxWriter;
 import dev.wallpaperhub.account.outbox.UserEvents;
 import dev.wallpaperhub.platform.problem.AppException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +45,10 @@ import org.springframework.transaction.IllegalTransactionStateException;
         properties = {
             "spring.jpa.hibernate.ddl-auto=validate",
             // application.yml takes this from the environment (OTEL_SERVICE_NAME), which a unit test does not have
-            "spring.application.name=account-test"
+            "spring.application.name=account-test",
+            // REDIS_HOST and REDIS_PORT are not set either; nothing connects, the cache of this test is a no-op
+            "spring.data.redis.host=localhost",
+            "spring.data.redis.port=6379"
         })
 @EnabledIf("dev.wallpaperhub.account.user.PostgresSupport#dockerAvailable")
 class UserPersistenceTest {
@@ -54,12 +60,29 @@ class UserPersistenceTest {
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @Import({UserService.class, OutboxWriter.class, AuditWriter.class})
+    @Import({UserService.class, UserCache.class, OutboxWriter.class, AuditWriter.class})
     static class TestConfig {
 
         @Bean
         Clock clock() {
             return Clock.systemUTC();
+        }
+
+        /** These tests are about the database; the cache has its own tests (UserCacheRedisTest). */
+        @Bean
+        CacheStore noCache() {
+            return new CacheStore() {
+                @Override
+                public Optional<String> get(String key) {
+                    return Optional.empty();
+                }
+
+                @Override
+                public void set(String key, String value, Duration ttl) {}
+
+                @Override
+                public void delete(String key) {}
+            };
         }
     }
 
