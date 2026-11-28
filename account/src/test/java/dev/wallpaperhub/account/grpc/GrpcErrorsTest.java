@@ -28,7 +28,8 @@ class GrpcErrorsTest {
 
     @Test
     void anAppExceptionKeepsItsSlugAndCodeInTheDescription() {
-        var status = GrpcErrors.toStatus(AppException.notFound("user.not-found")).getStatus();
+        var status =
+                GrpcErrors.toStatus(AppException.notFound("user.not-found")).getStatus();
 
         assertThat(status.getCode()).isEqualTo(Status.Code.NOT_FOUND);
         assertThat(status.getDescription()).contains("user.not-found");
@@ -43,13 +44,15 @@ class GrpcErrorsTest {
         assertThat(DatabaseFailures.isUnavailable(
                         new IllegalStateException("wrapped", new SQLTransientConnectionException("pool timeout"))))
                 .isTrue();
-        assertThat(DatabaseFailures.isUnavailable(new DataAccessResourceFailureException("down", new ConnectException())))
+        assertThat(DatabaseFailures.isUnavailable(
+                        new DataAccessResourceFailureException("down", new ConnectException())))
                 .isTrue();
     }
 
     @Test
     void anythingElseIsInternalAndLeaksNothing() {
-        var status = GrpcErrors.toStatus(new DuplicateKeyException("secret SQL detail")).getStatus();
+        var status = GrpcErrors.toStatus(new DuplicateKeyException("secret SQL detail"))
+                .getStatus();
 
         assertThat(status.getCode()).isEqualTo(Status.Code.INTERNAL);
         assertThat(status.getDescription()).doesNotContain("secret");

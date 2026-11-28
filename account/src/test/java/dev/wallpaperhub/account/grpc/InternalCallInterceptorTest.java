@@ -46,14 +46,13 @@ class InternalCallInterceptorTest {
 
     @BeforeEach
     void start() throws Exception {
-        JwtDecoder decoder = value ->
-                switch (value) {
-                    case "service" -> token(value, "internal");
-                    case "user" -> token(value, "USER");
-                    case "bad" -> throw new BadJwtException("expired");
-                    case "down" -> throw new JwtException("Couldn't retrieve remote JWK set");
-                    default -> throw new BadJwtException("unknown");
-                };
+        JwtDecoder decoder = value -> switch (value) {
+            case "service" -> token(value, "internal");
+            case "user" -> token(value, "USER");
+            case "bad" -> throw new BadJwtException("expired");
+            case "down" -> throw new JwtException("Couldn't retrieve remote JWK set");
+            default -> throw new BadJwtException("unknown");
+        };
         AccountServiceGrpc.AccountServiceImplBase fake = new AccountServiceGrpc.AccountServiceImplBase() {
             @Override
             public void getUser(GetUserRequest request, StreamObserver<User> out) {

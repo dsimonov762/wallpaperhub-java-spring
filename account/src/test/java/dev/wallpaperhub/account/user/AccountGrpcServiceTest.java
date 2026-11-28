@@ -39,7 +39,8 @@ import org.springframework.test.context.DynamicPropertySource;
             "spring.jpa.hibernate.ddl-auto=validate",
             // application.yml takes this from the environment (OTEL_SERVICE_NAME), which a unit test does not have
             "spring.application.name=account-test",
-            // the gRPC server of the starter starts in every context: a free port, so that contexts and a running service do not collide
+            // the gRPC server of the starter starts in every context: a free port, so that contexts and a running
+            // service do not collide
             "spring.grpc.server.port=0",
             // REDIS_HOST and REDIS_PORT are not set either; nothing connects, the cache of this test is a no-op
             "spring.data.redis.host=localhost",
@@ -108,8 +109,7 @@ class AccountGrpcServiceTest {
     }
 
     private void insert(UUID id, String username, Instant updatedAt, boolean deleted) {
-        jdbc.sql(
-                        """
+        jdbc.sql("""
                         insert into users (id, username, email, display_name, locale, updated_at, deleted_at)
                         values (:id, :username, :email, :displayName, 'de', :updatedAt, case when :deleted then now() end)
                         """)
@@ -139,7 +139,8 @@ class AccountGrpcServiceTest {
 
     @Test
     void getUserReturnsTheContractFieldsWithAnEmptyAvatarUrl() {
-        User user = stub.getUser(GetUserRequest.newBuilder().setId(U1.toString()).build());
+        User user =
+                stub.getUser(GetUserRequest.newBuilder().setId(U1.toString()).build());
 
         assertThat(user.getId()).isEqualTo(U1.toString());
         assertThat(user.getUsername()).isEqualTo("u1");
@@ -151,11 +152,14 @@ class AccountGrpcServiceTest {
 
     @Test
     void getUserOfAnUnknownOrDeletedUserIsNotFoundAndOfABadIdInvalidArgument() {
-        assertThat(codeOf(() -> stub.getUser(GetUserRequest.newBuilder().setId(id(99).toString()).build())))
+        assertThat(codeOf(() -> stub.getUser(
+                        GetUserRequest.newBuilder().setId(id(99).toString()).build())))
                 .isEqualTo(Status.Code.NOT_FOUND);
-        assertThat(codeOf(() -> stub.getUser(GetUserRequest.newBuilder().setId(DELETED.toString()).build())))
+        assertThat(codeOf(() -> stub.getUser(
+                        GetUserRequest.newBuilder().setId(DELETED.toString()).build())))
                 .isEqualTo(Status.Code.NOT_FOUND);
-        assertThat(codeOf(() -> stub.getUser(GetUserRequest.newBuilder().setId("not-a-uuid").build())))
+        assertThat(codeOf(() -> stub.getUser(
+                        GetUserRequest.newBuilder().setId("not-a-uuid").build())))
                 .isEqualTo(Status.Code.INVALID_ARGUMENT);
         assertThat(codeOf(() -> stub.getUser(GetUserRequest.getDefaultInstance())))
                 .isEqualTo(Status.Code.INVALID_ARGUMENT);

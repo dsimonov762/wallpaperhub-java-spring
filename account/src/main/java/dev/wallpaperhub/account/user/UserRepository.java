@@ -16,8 +16,7 @@ interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpecificati
             Instant since, Pageable page);
 
     /** The chunks after it: keyset paging on (updated_at, id), so that no chunk skips or repeats a row with the same timestamp. */
-    @Query(
-            """
+    @Query("""
             select u from UserEntity u
             where u.deletedAt is null and (u.updatedAt > :ts or (u.updatedAt = :ts and u.id > :id))
             order by u.updatedAt asc, u.id asc

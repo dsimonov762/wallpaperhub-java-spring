@@ -36,7 +36,8 @@ import org.springframework.test.context.DynamicPropertySource;
             "spring.jpa.hibernate.ddl-auto=validate",
             // application.yml takes this from the environment (OTEL_SERVICE_NAME), which a unit test does not have
             "spring.application.name=account-test",
-            // the gRPC server of the starter starts in every context: a free port, so that contexts and a running service do not collide
+            // the gRPC server of the starter starts in every context: a free port, so that contexts and a running
+            // service do not collide
             "spring.grpc.server.port=0"
         })
 @EnabledIf("dev.wallpaperhub.account.user.PostgresSupport#dockerAvailable")

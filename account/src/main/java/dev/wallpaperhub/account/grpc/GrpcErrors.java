@@ -41,7 +41,9 @@ public final class GrpcErrors {
             return codeOf(app.status()).toStatus().withDescription(description).asRuntimeException();
         }
         if (DatabaseFailures.isUnavailable(failure)) {
-            LOG.warn("gRPC call failed, database unavailable: {}", failure.getClass().getSimpleName());
+            LOG.warn(
+                    "gRPC call failed, database unavailable: {}",
+                    failure.getClass().getSimpleName());
             return Status.UNAVAILABLE.withDescription("database unavailable").asRuntimeException();
         }
         LOG.error("gRPC call failed", failure);
