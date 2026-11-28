@@ -10,6 +10,7 @@ import dev.wallpaperhub.account.outbox.UserEvents;
 import dev.wallpaperhub.platform.problem.AppException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -104,7 +105,7 @@ class UserPersistenceTest {
                 .param("id", id)
                 .param("username", username)
                 .param("email", username + "@example.com")
-                .param("displayName", username.substring(0, 1).toUpperCase() + username.substring(1))
+                .param("displayName", username.substring(0, 1).toUpperCase(Locale.ROOT) + username.substring(1))
                 .param("status", status)
                 .param("deleted", deleted)
                 .update();
