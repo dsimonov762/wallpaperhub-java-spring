@@ -13,14 +13,14 @@ public record PublicUserResponse(
         String bannerUrl,
         Instant createdAt) {
 
-    static PublicUserResponse of(UserEntity user) {
+    static PublicUserResponse of(UserResponse user) {
         return new PublicUserResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getDisplayName(),
-                user.getBio(),
-                null,
-                null,
-                user.getCreatedAt());
+                user.id(),
+                user.username(),
+                user.displayName(),
+                user.bio(),
+                user.avatarUrl(),
+                user.bannerUrl(),
+                user.createdAt());
     }
 }

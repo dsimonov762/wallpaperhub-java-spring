@@ -35,7 +35,8 @@ class UsersController {
 
     @GetMapping("/me")
     ResponseEntity<UserResponse> me(Authentication authentication) {
-        return ok(service.get(callerId(authentication)));
+        UserView view = service.view(callerId(authentication));
+        return ResponseEntity.ok().eTag(Long.toString(view.version())).body(view.user());
     }
 
     @PatchMapping("/me")
@@ -52,7 +53,7 @@ class UsersController {
 
     @GetMapping("/{id}")
     PublicUserResponse get(@PathVariable UUID id) {
-        return PublicUserResponse.of(service.get(id));
+        return PublicUserResponse.of(service.view(id).user());
     }
 
     @GetMapping

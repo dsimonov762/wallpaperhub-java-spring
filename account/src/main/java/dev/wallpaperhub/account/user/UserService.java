@@ -22,6 +22,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Reading, listing, changing and deleting profiles. Every change writes its audit row and, where the contract says so, its outbox
@@ -34,17 +36,27 @@ class UserService {
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final Clock clock;
+    private final UserCache cache;
 
-    UserService(UserRepository users, OutboxWriter outbox, AuditWriter audit, Clock clock) {
+    UserService(UserRepository users, OutboxWriter outbox, AuditWriter audit, Clock clock, UserCache cache) {
         this.users = users;
         this.outbox = outbox;
         this.audit = audit;
         this.clock = clock;
+        this.cache = cache;
     }
 
     @Transactional(readOnly = true)
     UserEntity get(UUID id) {
         return find(id);
+    }
+
+    /**
+     * The profile for the read endpoints, from the cache when it can. Not transactional on purpose: no database connection is held
+     * while Redis is asked, and the loader is a single repository call.
+     */
+    UserView view(UUID id) {
+        return cache.get(id, () -> UserView.of(find(id)));
     }
 
     @Transactional(readOnly = true)
@@ -100,6 +112,7 @@ class UserService {
         user.touch(now);
         flush(user);
         audit.record(id, "PROFILE_UPDATED", id.toString(), before, after);
+        evictAfterCommit(id);
         if (displayNameChanged) {
             outbox.add(UserEvents.profileUpdated(
                     UUID.randomUUID(), id, user.getUsername(), user.getDisplayName(), null, now));
@@ -120,6 +133,21 @@ class UserService {
         flush(user);
         audit.record(actor, "USER_DELETED", id.toString(), null, null);
         outbox.add(UserEvents.deleted(UUID.randomUUID(), id, now));
+        evictAfterCommit(id);
+    }
+
+    /** After the commit, so that no reader can fill the cache with the old row after the entry was removed and before the change is visible. */
+    private void evictAfterCommit(UUID id) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cache.evict(id);
+                }
+            });
+        } else {
+            cache.evict(id);
+        }
     }
 
     private UserEntity find(UUID id) {
