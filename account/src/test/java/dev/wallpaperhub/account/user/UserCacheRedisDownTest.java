@@ -28,6 +28,8 @@ import org.springframework.test.context.DynamicPropertySource;
         properties = {
             "spring.jpa.hibernate.ddl-auto=validate",
             "spring.application.name=account-test",
+            // the gRPC server of the starter starts in every context: a free port, so that contexts and a running service do not collide
+            "spring.grpc.server.port=0",
             "spring.data.redis.host=127.0.0.1",
             "spring.data.redis.port=1",
             "spring.data.redis.timeout=200ms",

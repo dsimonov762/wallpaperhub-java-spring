@@ -11,6 +11,7 @@ COPY account/pom.xml account/pom.xml
 # The OpenTelemetry Java agent (version: a property of the root POM) in its own layer: a code change does not download it again.
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp -q -N dependency:copy
 COPY contracts/i18n contracts/i18n
+COPY contracts/proto contracts/proto
 COPY platform/src platform/src
 COPY account/src account/src
 # The cache mount keeps Maven's repository between builds; the wrapper downloads Maven itself (distributionUrl in .mvn/wrapper).
@@ -22,5 +23,5 @@ COPY --from=build /src/account/target/account.jar /app/app.jar
 COPY --from=build /src/target/otel/opentelemetry-javaagent.jar /otel/opentelemetry-javaagent.jar
 COPY docker/entrypoint.sh /app/entrypoint.sh
 USER 10001:10001
-EXPOSE 8080 8081
+EXPOSE 8080 8081 9090
 ENTRYPOINT ["/app/entrypoint.sh"]

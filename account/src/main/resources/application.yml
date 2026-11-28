@@ -23,3 +23,6 @@ spring:
       connect-timeout: 200ms
       repositories:
         enabled: false               # Redis is only used through StringRedisTemplate, not as a Spring Data repository store
+  grpc:
+    server:
+      port: ${GRPC_PORT:9090}        # SERVICE-SPEC section 1; the AccountService of contracts/proto, internal callers only (see InternalCallInterceptor)

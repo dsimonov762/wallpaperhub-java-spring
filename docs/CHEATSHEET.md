@@ -57,6 +57,18 @@ This repository has its own `up-chaos`: the template's starts all four services 
 
 The OpenTelemetry Java agent is started by `docker/entrypoint.sh` (`-javaagent`) and configured only by the `OTEL_*` variables of the contract. It creates the server span of each request (continuing `traceparent`), client spans, and the HTTP metric `http.server.request.duration`, and exports logs, traces and metrics over gRPC to Alloy. Code that needs the current ids reads `Span.current()` (`opentelemetry-api`, already in `platform`); `PlatformRequestFilter` does that once per request and puts `trace_id` and `span_id` into the log's MDC and into `problem+json`. Custom spans or metrics: use the API (`GlobalOpenTelemetry`), not the SDK. Version of the agent: `opentelemetry-javaagent.version` in the root `pom.xml`.
 
+## gRPC
+
+The `AccountService` of `contracts/proto/account/v1` listens on 9090 in the container (9101 on the host). Every call needs the token of a service account (role `internal`); server reflection is on, so `grpcurl` needs no `.proto`:
+
+```
+TOKEN=$(.template/scripts/token.sh --client catalog-svc)
+grpcurl -plaintext -H "authorization: Bearer $TOKEN" localhost:9101 list
+grpcurl -plaintext -H "authorization: Bearer $TOKEN" -d '{"id":"<uuid>"}' localhost:9101 wallpaperhub.account.v1.AccountService/GetUser
+```
+
+A user's token (`scripts/token.sh alice`) is answered with `PERMISSION_DENIED`, no token with `UNAUTHENTICATED`. The classes are generated from `contracts/proto` by `protobuf-maven-plugin` into `account/target/generated-sources/protobuf`; there is no copy of the `.proto` under `src/`.
+
 ## The template
 
 | What | Command |

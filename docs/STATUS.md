@@ -28,9 +28,9 @@ Merged in pull request #8; **Confirmed** by the owner (local run with Docker and
 
 Needs Docker: without it the tests skip themselves (`./mvnw test` on a machine without Docker stays green); on CI (`CI` is set) `DockerInCiTest` fails instead of letting them vanish silently.
 
-## WP-S1, increment 2a (Redis cache-aside): written, not run
+## WP-S1, increment 2a (Redis cache-aside): confirmed
 
-Branch `wp/s1-account-redis`. **Verification: nothing was compiled or run** (no Docker, no Maven Central in the sandbox; only a `javac` syntax check). Expect compile errors first; the new dependency is `spring-boot-starter-data-redis`.
+Merged in pull request #9; **confirmed** by the owner (local run with Docker, CI, and the chaos scenarios of `make up-chaos`).
 
 - **Contract:** `cache:user:{id}`, JSON, 5 min TTL with plus or minus 20 % jitter, single-flight, invalidation on every write (`contracts/db-schema/redis/keys.yaml`, README 6.5). The cached value is `{"version": n, "user": {User schema}}`: the schema has no `version`, the `ETag` needs it. `GET /users/me` and `GET /users/{id}` both read through it (the public view is derived from the same entry).
 - **Eviction after commit:** a transaction synchronization removes the key once the change is committed. An eviction that cannot reach Redis is remembered (up to 10 000 ids) and retried before the next read when Redis answers again.
@@ -38,6 +38,18 @@ Branch `wp/s1-account-redis`. **Verification: nothing was compiled or run** (no 
 - **Tests:** `UserCacheTest` (fake store: hit and miss, TTL jitter, unreadable entry, outage window, pending evictions, single-flight with 8 readers), `UserCacheRedisTest` (real Redis: key, TTL, hit without database, eviction on update and delete, no negative caching), `UserCacheRedisDownTest` (nothing listens on the port: reads and writes still work), `UserServiceTest` (eviction rules).
 - **Known limits:** a reader that loaded the old row just before a commit can store it just after the eviction; it lives until its TTL (at most 6 minutes). The metric `cache_hit_ratio` (README section 11) comes with the metrics increment. Deletion by another instance needs no Kafka consumer: all instances share one Redis and the eviction is done by the instance that commits.
 - **Chaos:** `make up-chaos` of this repository (the template's one tries to build all four services) starts the real account and the gateway behind Toxiproxy and Prism mocks for the other three; then `make chaos-run S=redis-down`. Written without running it. Its probes also read `/wallpapers/{id}` and `/notifications`, which the mocks answer. The load test is not run.
+
+## WP-S1, increment 2b (gRPC server): written, not run
+
+Branch `wp/s1-account-grpc`. **Verification: nothing was compiled or run** (no Docker, no Maven Central in the sandbox; only a `javac` syntax check). Expect compile errors first. Everything below the first bullet is a guess about Spring Boot 4.2's gRPC support, taken from its reference documentation.
+
+- **Build:** `spring-boot-starter-grpc-server` (Boot 4.2 manages it, grpc-java and protobuf-java) and `io.github.ascopes:protobuf-maven-plugin` (managed and pre-configured by `spring-boot-starter-parent`). The only change to the plugin is `sourceDirectories` = `contracts/proto`, so the vendored contract is compiled in place. The Dockerfile copies `contracts/proto`. Error Prone skips `generated-sources` (root POM).
+- **Contract:** `GetUser` (through the Redis cache), `GetUsersByIds` (at most 100 ids, unknown and deleted ids omitted, duplicates once), `ListUsersUpdatedSince` (oldest first, deleted users excluded, keyset paging on `(updated_at, id)` in chunks of 500 with flow control, stops when the client cancels). `avatar_url` is the empty string. Errors follow README 5.3 (`GrpcErrors`): invalid id is `INVALID_ARGUMENT`, unknown or deleted is `NOT_FOUND`, a database that cannot be reached is `UNAVAILABLE`, anything else is `INTERNAL` without details.
+- **Security:** `InternalCallInterceptor` validates the `authorization: Bearer` token with the platform's `JwtDecoder` (signature, issuer, audience, expiry, `typ=Bearer`) and requires the realm role `internal`: no or bad token is `UNAUTHENTICATED`, a valid token without the role `PERMISSION_DENIED`, signing keys not fetchable `UNAVAILABLE`. The service is wrapped, not registered as a bean of its own (Boot exposes every `BindableService` bean), so there is no unauthenticated way in. Server reflection is on and not authenticated (it lists service names only).
+- **Tests:** `InternalCallInterceptorTest` and `GrpcErrorsTest` (in-process, no Docker); `AccountGrpcServiceTest` (real PostgreSQL, in-process transport: fields, errors, the 100 limit, order, equal timestamps, chunking, early stop).
+- **Guesses to check first if the build or the context fails:** the `sourceDirectories` element of the protobuf plugin (`combine.self="override"`); that Boot's own gRPC security and OAuth2 auto-configuration (`GrpcServerSecurityAutoConfiguration`, `GrpcServerOAuth2ResourceServerAutoConfiguration`) does not clash with the interceptor; that `spring.grpc.server.port=0` is enough to keep the test contexts from binding 9090 (they all start the gRPC server).
+- **Not run:** a real call with a Keycloak token (`grpcurl`, see the CHEATSHEET), the load test, chaos `postgres-down` for the gRPC path.
+- **Gap found on the way, not part of this change:** `ProblemExceptionHandler` answers 500 for any unexpected exception, so with PostgreSQL down the HTTP endpoints answer 500, where the chaos scenario `postgres-down` expects a fast 503. `DatabaseFailures` (used by the gRPC mapping) is the classifier for a follow-up fix.
 
 ## What exists
 
@@ -74,5 +86,5 @@ The first increment (build, `platform`, `account` scaffold, conformance without 
 
 ## Next
 
-1. Run increment 2a: `make fmt`, `./mvnw verify` (Docker running), then `make down && make up-obs && make seed && make run SVC=account && make conformance SVC=account ARGS="--lifecycle"`; then `make chaos-run S=redis-down` and `S=postgres-down` against it. Send the output of whatever fails.
-2. WP-S1, next increments: the gRPC server; the outbox relay with the Avro producer; the Keycloak admin client and registration; avatar and banner with media verification; token endpoints, purge job and metrics.
+1. Run increment 2b: `make fmt`, `./mvnw verify` (Docker running; the first build downloads protoc and the gRPC plugin), then `make down && make up-obs && make seed && make run SVC=account && make conformance SVC=account ARGS="--lifecycle"`; then the `grpcurl` calls of the CHEATSHEET (`list` and `GetUser` with `--client catalog-svc`, and with a user token to see `PERMISSION_DENIED`). Send the output of whatever fails.
+2. WP-S1, next increments: HTTP 503 when PostgreSQL is down (`fix/`); the outbox relay with the Avro producer; the Keycloak admin client and registration; avatar and banner with media verification; token endpoints, purge job and metrics.

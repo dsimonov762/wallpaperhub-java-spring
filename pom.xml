@@ -51,7 +51,8 @@
             <compilerArgs>
               <arg>-XDcompilePolicy=simple</arg>
               <arg>--should-stop=ifError=FLOW</arg>
-              <arg>-Xplugin:ErrorProne</arg>
+              <!-- the checks are for code that people write: not for what protoc and other generators put in target/generated-sources -->
+              <arg>-Xplugin:ErrorProne -XepExcludedPaths:.*/generated-sources/.*</arg>
             </compilerArgs>
             <annotationProcessorPaths>
               <path>
